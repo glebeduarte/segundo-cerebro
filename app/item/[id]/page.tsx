@@ -15,6 +15,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   if (!user) redirect("/login");
   const { data: i } = await sb.from("itens").select("*, categorias(nome)").eq("id", id).single();
   if (!i) notFound();
+  if (i.tipo === "nota") redirect(`/notas/${i.id}`);
   const [{ data: filhos }, { data: pai }] = await Promise.all([
     sb.from("itens").select("id,tipo,titulo,resumo,status,prazo,link,origem_ref,pai_id,ultimo_movimento").eq("pai_id", id).neq("status", "arquivado").order("ultimo_movimento", { ascending: false }),
     i.pai_id ? sb.from("itens").select("id,titulo,link").eq("id", i.pai_id).single() : Promise.resolve({ data: null }),
@@ -36,6 +37,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           : <span className="aviso">Ainda não há um lugar definido para resolver isto. Cole o link abaixo.</span>}
         {i.tipo === "tarefa" && i.status !== "concluido" && <form action={concluir}><input type="hidden" name="id" value={i.id} /><button className="btn">Concluir</button></form>}
         <form action={arquivar}><input type="hidden" name="id" value={i.id} /><button className="btn">Arquivar</button></form>
+        <Link className="btn" href={`/notas/nova?pai=${i.id}`}>Nova nota</Link>
       </div>
 
       <section className="grid">

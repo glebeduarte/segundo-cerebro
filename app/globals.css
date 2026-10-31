@@ -209,3 +209,70 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
 .grafo .no:hover circle,.grafo .no:focus circle{stroke:var(--text);stroke-width:2}
 .grafo .no:focus{outline:none}
 @media (max-width:900px){.subpagina h1{font-size:30px}.vida-row{grid-template-columns:110px minmax(0,1fr) 36px!important}.grafo .legenda .nota{margin-left:0}}
+/* notas */
+.notas-app{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:100vh;background:#f1f1ef}
+.notas-lado{padding:24px 16px;position:sticky;top:0;height:100vh;overflow:auto}
+.notas-lado .voltar{color:#5f5f5b;margin:0 0 12px}.notas-lado .voltar a{color:inherit}
+.notas-topo{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.notas-topo h1{font-size:24px;margin:0}
+.notas-topo .btn{height:32px;padding:0 14px;border-radius:999px;background:#1c1d1b;color:#fff;font-size:13px;display:inline-flex;align-items:center;text-decoration:none}
+.notas-lado .busca input{width:100%;height:36px;border:1px solid #d6d6d1;border-radius:10px;padding:0 12px;font:inherit;background:#fff}
+.notas-lado .grupo{margin-top:20px}
+.notas-lado .grupo h2{font-size:12px;font-weight:500;color:#5f5f5b;margin:0 0 6px;display:flex;align-items:center}
+.notas-lado ul{list-style:none;margin:0;padding:0}
+.notas-lado li a{display:block;padding:6px 8px;border-radius:8px;color:#1c1d1b;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notas-lado li a:hover{background:#e6e6e2}
+.notas-lado li a small{color:#5f5f5b}
+.notas-lado .tags{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.notas-lado .tags a{font-size:12px;color:#13897e;text-decoration:none;background:#e3f0ee;border-radius:999px;padding:2px 9px}
+.notas-corpo{background:#fff;margin:8px 8px 8px 0;border:1px solid #e7e5de;border-radius:16px;min-width:0}
+.notas-corpo .painel{max-width:1100px;padding:28px 32px 80px}
+.titulo-lista{font-size:20px;margin:0 0 16px}
+.editor .ed-topo{display:flex;align-items:baseline;gap:16px}
+.editor .ed-titulo{flex:1;min-width:0;border:0;outline:0;font:700 36px/1.1 "Instrument Sans",system-ui;letter-spacing:-.02em;color:var(--text);background:transparent;padding:0}
+.editor .ed-estado{font-size:12px;color:var(--muted);white-space:nowrap}
+.editor .ed-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:14px 0}
+.editor .ed-meta label{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.editor .ed-meta select{height:32px;border:1px solid var(--control);border-radius:999px;padding:0 10px;background:#fff;font:inherit;font-size:13px;max-width:260px}
+.editor .ed-meta .btn{height:32px;display:inline-flex;align-items:center;text-decoration:none;color:var(--text)}
+.editor .modos{margin-left:auto;display:flex;background:var(--surface);border-radius:999px;padding:3px}
+.editor .modos button{border:0;background:transparent;height:28px;padding:0 12px;border-radius:999px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
+.editor .modos button.on{background:#fff;color:var(--text)}
+.editor .ed-barra{display:flex;flex-wrap:wrap;gap:4px;padding:6px;background:var(--surface);border-radius:12px;margin-bottom:10px}
+.editor .ed-barra button{height:30px;min-width:34px;padding:0 10px;border:0;border-radius:8px;background:transparent;font:inherit;font-size:13px;color:var(--text);cursor:pointer}
+.editor .ed-barra button:hover{background:#fff}
+.editor .ed-area{display:grid;gap:20px}
+.editor .ed-area.m-lado{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.editor .ed-escrita{position:relative}
+.editor textarea{width:100%;min-height:60vh;resize:vertical;border:1px solid var(--border);border-radius:14px;padding:18px;font:400 15px/1.7 "Instrument Sans",system-ui;color:var(--text);background:#fff;outline:0}
+.editor textarea:focus{border-color:var(--accent)}
+.editor .ed-sug{position:absolute;left:18px;top:18px;z-index:5;list-style:none;margin:0;padding:6px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:240px}
+.editor .ed-sug button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:7px 10px;border-radius:8px;font:inherit;cursor:pointer}
+.editor .ed-sug button:hover{background:var(--surface)}
+.nota-leitura{font-size:16px;line-height:1.7;color:var(--text);min-width:0}
+.nota-leitura h1{font-size:28px;line-height:1.15;margin:0 0 12px}
+.nota-leitura h2{font-size:21px;margin:24px 0 8px}
+.nota-leitura h3{font-size:17px;margin:20px 0 6px}
+.nota-leitura p{margin:0 0 12px}
+.nota-leitura ul,.nota-leitura ol{padding-left:22px;margin:0 0 12px}
+.nota-leitura li:has(>input[type=checkbox]){list-style:none;margin-left:-22px}
+.nota-leitura input[type=checkbox]{margin-right:8px;accent-color:#13897e;width:15px;height:15px;vertical-align:-2px}
+.nota-leitura blockquote{margin:0 0 12px;padding:4px 14px;border-left:3px solid var(--control);color:var(--muted)}
+.nota-leitura code{background:var(--surface);border-radius:6px;padding:1px 6px;font-size:14px}
+.nota-leitura pre{background:var(--surface);border-radius:10px;padding:12px;overflow:auto}
+.nota-leitura table{border-collapse:collapse;margin:0 0 12px;width:100%}
+.nota-leitura th,.nota-leitura td{border:1px solid var(--border);padding:6px 10px;text-align:left}
+.nota-leitura a{color:#13897e}
+.nota-leitura a.wl{text-decoration:none;background:#e3f0ee;border-radius:6px;padding:0 5px}
+.nota-leitura a.wl.novo{background:transparent;border:1px dashed #13897e;color:#13897e}
+.nota-leitura a.tag{text-decoration:none;font-size:14px}
+@media (max-width:900px){
+  .notas-app{grid-template-columns:1fr}
+  .notas-lado{position:relative;height:auto;padding:16px}
+  .notas-corpo{margin:0;border-radius:16px 16px 0 0}
+  .notas-corpo .painel{padding:20px 16px 80px}
+  .editor .ed-titulo{font-size:26px}
+  .editor .ed-area.m-lado{grid-template-columns:1fr}
+  .editor .modos{margin-left:0}
+  .editor textarea{min-height:50vh}
+}
