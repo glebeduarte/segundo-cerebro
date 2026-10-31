@@ -133,3 +133,9 @@ svg.links circle.hot{fill:var(--accent)}
 .painel .row form{display:flex;gap:8px;align-items:center}
 .painel .cls select{height:32px;border:1px solid var(--control);border-radius:999px;padding:0 10px;background:#fff;font:inherit;font-size:13px;color:var(--text)}
 @media (max-width:900px){.painel .row.inbox{flex-wrap:wrap}.painel .row.inbox .t{flex-basis:100%}.painel .cls{flex-wrap:wrap}}
+.painel .panel{scroll-margin-top:16px;transition:box-shadow .3s}
+.painel .panel:focus{outline:none}
+.painel .panel.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(19,137,126,0)}15%{box-shadow:0 0 0 4px rgba(19,137,126,.45)}100%{box-shadow:0 0 0 0 rgba(19,137,126,0)}}
+.painel .panel.so-parados .lane:not(.is-stale){opacity:.3}
+@media (prefers-reduced-motion:reduce){.painel .panel.flash{animation:none;box-shadow:0 0 0 3px rgba(19,137,126,.45)}}

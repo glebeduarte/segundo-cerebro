@@ -155,8 +155,19 @@ chips.forEach(c=>{
   c.addEventListener('mouseenter',()=>{clearTimeout(hotTimer);setHot(c.dataset.id)});
   c.addEventListener('focus',()=>setHot(c.dataset.id));
   c.addEventListener('mouseleave',()=>{hotTimer=setTimeout(()=>setHot(null),250)});
-  c.addEventListener('click',()=>{setHot(c.dataset.id);clearTimeout(hotTimer);hotTimer=setTimeout(()=>setHot(null),3500)});
+  c.addEventListener('click',()=>{setHot(c.dataset.id);clearTimeout(hotTimer);hotTimer=setTimeout(()=>setHot(null),3500);irPara(c.dataset.id)});
+  c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();irPara(c.dataset.id)}});
 });
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ALVO={hoje:'h-hoje',entrada:'h-entrada',projetos:'h-mov',parados:'h-mov',reunioes:'h-reu',ideias:'h-ideias',livros:'h-ideias'};
+function irPara(id){
+  const h=document.getElementById(ALVO[id]); if(!h)return;
+  const panel=h.closest('.panel')||h;
+  panel.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  if(id==='parados')panel.classList.add('so-parados');else panel.classList.remove('so-parados');
+  panel.classList.remove('flash');void panel.offsetWidth;panel.classList.add('flash');
+  setTimeout(()=>{panel.setAttribute('tabindex','-1');panel.focus({preventScroll:true})},500);
+}
 const mic=document.getElementById('mic'), q=document.getElementById('q');
 function listen(){
   listening=!listening; mic.classList.toggle('on',!!listening); setHot(null);
@@ -169,7 +180,6 @@ function listen(){
 mic.addEventListener('click',listen); canvas.addEventListener('click',listen);
 
 /* loop */
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let spinY=0, nextBlink=performance.now()+2500;
 function tick(t){
   look.x+=(target.x-look.x)*.08; look.y+=(target.y-look.y)*.08;
