@@ -199,3 +199,72 @@ function tick(t){
 document.fonts.ready.then(()=>{layout();requestAnimationFrame(tick)});
 
 })();
+/* ---------- som e circuitos ---------- */
+(function extras(){
+  if(!document.getElementById('stage')){return}
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* som: sintetizado, sem arquivos */
+  let ctx=null, mudo=false; try{mudo=localStorage.getItem('sc-mudo')==='1'}catch(e){}
+  const ac=()=>ctx||(ctx=new (window.AudioContext||window.webkitAudioContext)());
+  function bip(tipo){
+    if(mudo)return; let a; try{a=ac()}catch(e){return}
+    if(a.state==='suspended')a.resume();
+    const t=a.currentTime, o=a.createOscillator(), g=a.createGain(), f=a.createBiquadFilter();
+    f.type='lowpass'; f.frequency.value=2400;
+    const [f1,f2,dur]=tipo==='ir'?[520,1040,.16]:tipo==='mic'?[660,440,.2]:[880,1320,.07];
+    o.type='sine'; o.frequency.setValueAtTime(f1,t); o.frequency.exponentialRampToValueAtTime(f2,t+dur*.7);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(tipo==='olhar'?.035:.06,t+.012); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(f).connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.02);
+  }
+  let interagiu=false; addEventListener('pointerdown',()=>{interagiu=true},{once:true});
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.addEventListener('mouseenter',()=>{if(interagiu)bip('olhar')});
+    c.addEventListener('click',()=>bip('ir'));
+  });
+  const micBtn=document.getElementById('mic'); if(micBtn)micBtn.addEventListener('click',()=>bip('mic'));
+  const orbC=document.getElementById('orb'); if(orbC)orbC.addEventListener('click',()=>bip('mic'));
+  /* botão de som no topo */
+  const hdr=document.querySelector('header');
+  if(hdr){
+    const b=document.createElement('button'); b.className='som'; b.type='button';
+    const pinta=()=>{b.setAttribute('aria-label',mudo?'Ligar som':'Desligar som');b.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h4l5-4v14l-5-4H4z"/>${mudo?'<path d="M17 9l4 6M21 9l-4 6"/>':'<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>'}</svg>`};
+    pinta(); b.addEventListener('click',()=>{mudo=!mudo;try{localStorage.setItem('sc-mudo',mudo?'1':'0')}catch(e){};pinta();if(!mudo)bip('olhar')});
+    hdr.appendChild(b);
+  }
+  /* circuitos: trilhas ortogonais com pulsos que correm por elas */
+  const stage=document.getElementById('stage');
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','circuitos'); svg.setAttribute('aria-hidden','true');
+  stage.prepend(svg);
+  let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  function desenha(){
+    const W=stage.clientWidth,H=stage.clientHeight; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    seed=7; let html='';
+    const sr=stage.getBoundingClientRect(), zonas=[...stage.querySelectorAll('.left,.chip,.status')].filter(e=>e.offsetParent).map(e=>{const r=e.getBoundingClientRect();return[r.left-sr.left-16,r.top-sr.top-16,r.right-sr.left+16,r.bottom-sr.top+16]});
+    const livre=(x,y)=>!zonas.some(([a,b,c,d])=>x>a&&x<c&&y>b&&y<d);
+    const n=Math.round(W*H/40000);
+    for(let i=0,tent=0;i<n&&tent<n*20;tent++){
+      let x=Math.round(rnd()*W/24)*24, y=Math.round(rnd()*H/24)*24, d=`M${x},${y}`; const pts=[[x,y]];
+      const passos=3+Math.floor(rnd()*4); let dir=rnd()<.5?0:1;
+      for(let k=0;k<passos;k++){
+        const L=(2+Math.floor(rnd()*6))*24, s=rnd()<.5?-1:1;
+        if(dir===0)x+=L*s; else y+=L*s;
+        if(rnd()<.4){x+=12*s;y+=12*(rnd()<.5?-1:1)}
+        d+=` L${x},${y}`; dir=1-dir; pts.push([x,y]);
+      }
+      if(!pts.every(([px,py])=>livre(px,py)&&livre((px+pts[0][0])/2,(py+pts[0][1])/2)))continue;
+      i++;
+      const dur=(4+rnd()*6).toFixed(1), atraso=(-rnd()*10).toFixed(1);
+      html+=`<path class="trilha" d="${d}"/><circle class="no" cx="${x}" cy="${y}" r="2.2"/>`;
+      if(!reduce)html+=`<path class="pulso" d="${d}" pathLength="100" style="animation-duration:${dur}s;animation-delay:${atraso}s"/>`;
+    }
+    svg.innerHTML=html;
+  }
+  setTimeout(desenha,300); let rt; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(desenha,200)});
+  /* quando uma área acende, a linha até ela ganha um pulso */
+  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('mouseenter',()=>{
+    document.querySelectorAll('svg.links path.corre').forEach(p=>p.remove());
+    const base=document.querySelector(`svg.links path[data-id="${c.dataset.id}"]`); if(!base||reduce)return;
+    const p=base.cloneNode(); p.setAttribute('class','corre'); p.setAttribute('pathLength','100'); base.after(p);
+  }));
+})();

@@ -139,3 +139,14 @@ svg.links circle.hot{fill:var(--accent)}
 @keyframes flash{0%{box-shadow:0 0 0 0 rgba(19,137,126,0)}15%{box-shadow:0 0 0 4px rgba(19,137,126,.45)}100%{box-shadow:0 0 0 0 rgba(19,137,126,0)}}
 .painel .panel.so-parados .lane:not(.is-stale){opacity:.3}
 @media (prefers-reduced-motion:reduce){.painel .panel.flash{animation:none;box-shadow:0 0 0 3px rgba(19,137,126,.45)}}
+/* circuitos do fundo */
+svg.circuitos{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+svg.circuitos .trilha{fill:none;stroke:#e1e1dc;stroke-width:1;stroke-linejoin:round}
+svg.circuitos .no{fill:#d6d6d0}
+svg.circuitos .pulso{fill:none;stroke:#13897e;stroke-width:1.6;stroke-linecap:round;stroke-dasharray:6 94;stroke-dashoffset:100;opacity:.55;animation:corre linear infinite}
+svg.links path.corre{stroke:#13897e;stroke-width:2.2;stroke-dasharray:8 92;stroke-dashoffset:100;animation:corre 1s ease-out forwards;stroke-linecap:round}
+@keyframes corre{to{stroke-dashoffset:0}}
+header .som{margin-left:12px;width:34px;height:34px;border-radius:50%;border:1px solid #d6d6d1;background:#fff;color:#5f5f5b;display:grid;place-items:center;cursor:pointer}
+header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
+@media (max-width:900px){header .som{margin-left:auto}}
+@media (prefers-reduced-motion:reduce){svg.links path.corre{display:none}}
