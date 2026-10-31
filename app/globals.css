@@ -308,3 +308,37 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
 .row.feita b{text-decoration:line-through;color:var(--muted);font-weight:400}
 .ph h2.alerta{color:var(--warning)}
 @media (max-width:900px){.nova-tarefa{grid-template-columns:1fr 1fr}.nova-tarefa input[name=titulo],.nova-tarefa input[name=link]{grid-column:1/-1}.nova-tarefa .btn{grid-column:1/-1}.row .abrir{max-width:110px}}
+/* mapa: zoom e caixa de detalhes */
+.grafo .palco{position:relative;overflow:hidden;border-radius:14px;background:#fafaf8}
+.grafo svg{user-select:none;-webkit-user-select:none}
+.grafo .no.sel circle:not(.anel){stroke:var(--text)!important;stroke-width:2.5px}
+.grafo .zoom{position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:4px}
+.grafo .zoom button{width:34px;height:34px;border-radius:50%;border:0;background:transparent;font:500 18px/1 "Instrument Sans";cursor:pointer;color:var(--text)}
+.grafo .zoom button:hover{background:var(--surface)}
+.grafo .zoom .ajustar{font-size:15px}
+.grafo .zoom .nivel{font-size:12px;color:var(--muted);padding:0 8px 0 2px;min-width:44px}
+.grafo .detalhe{position:absolute;top:12px;right:12px;width:320px;max-height:calc(100% - 24px);overflow:auto;background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.10);animation:surge .2s ease-out}
+@keyframes surge{from{opacity:0;transform:translateY(6px)}}
+.grafo .detalhe .fechar{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:transparent;font-size:20px;cursor:pointer;color:var(--muted)}
+.grafo .detalhe .fechar:hover{background:var(--surface);color:var(--text)}
+.grafo .detalhe .tipo{margin:0 0 4px;font-size:12px;color:var(--muted)}
+.grafo .detalhe h3{margin:0 28px 6px 0;font-size:19px;line-height:1.2}
+.grafo .detalhe .linha{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.grafo .detalhe dl{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:12px 0}
+.grafo .detalhe dt{font-size:12px;color:var(--muted)}
+.grafo .detalhe dd{margin:2px 0 0;font-size:15px}
+.grafo .detalhe dd.alerta{color:var(--warning)}
+.grafo .detalhe .resumo{font-size:14px;line-height:1.5;margin:0 0 12px}
+.grafo .detalhe .ligados{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:4px}
+.grafo .detalhe .ligados button{width:100%;display:flex;align-items:center;gap:6px;text-align:left;border:0;background:var(--surface);border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;cursor:pointer;color:var(--text)}
+.grafo .detalhe .ligados button:hover{background:#ebebe7}
+.grafo .detalhe .ligados small{margin-left:auto;color:var(--muted);font-size:11px}
+.grafo .detalhe .ligados .mais{font-size:12px;color:var(--muted);padding-left:10px}
+.grafo .detalhe .acoes{display:flex;flex-wrap:wrap;gap:8px}
+.grafo .detalhe .btn{height:34px;display:inline-flex;align-items:center;text-decoration:none;font-size:13px}
+.grafo .detalhe .btn.primary{color:#fff}
+@media (max-width:900px){
+  .grafo .detalhe{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:60%}
+  .grafo .zoom{bottom:auto;top:12px}
+}
+@media (prefers-reduced-motion:reduce){.grafo .detalhe{animation:none}}
