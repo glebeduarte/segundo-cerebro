@@ -1,5 +1,5 @@
 -- Segundo Cérebro: esquema inicial
-create extension if not exists vector;
+create extension if not exists vector with schema extensions;
 
 create type item_status as enum ('ideia','ativo','pausado','parado','concluido','arquivado');
 create type item_tipo as enum ('projeto','area','tarefa','ideia','nota','livro','lazer','reuniao','conversa','recurso');
@@ -30,7 +30,7 @@ create table itens (
   origem text,                 -- chat_claude, captura, granola, calendar, manual
   origem_ref text,             -- id/URL da conversa ou reunião
   ultimo_movimento timestamptz default now(),
-  embedding vector(1024),
+  embedding extensions.vector(1024),
   criado_em timestamptz default now()
 );
 
@@ -90,14 +90,22 @@ do $$ declare t text;
 begin
   foreach t in array array['categorias','itens','conexoes','pessoas','eventos','uso_apps','briefings'] loop
     execute format('alter table %I enable row level security', t);
-    execute format('create policy dono on %I for all using (user_id = auth.uid()) with check (user_id = auth.uid())', t);
+    execute format('create policy dono on %I for all using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()))', t);
   end loop;
 end $$;
 alter table item_pessoas enable row level security;
 create policy dono on item_pessoas for all using (
-  exists (select 1 from itens i where i.id = item_id and i.user_id = auth.uid()));
+  exists (select 1 from itens i where i.id = item_id and i.user_id = (select auth.uid())));
+
+create index on itens (user_id, tipo, status);
+create index on itens (categoria_id);
+create index on itens (pai_id);
+create index on eventos (user_id, ocorrido_em desc);
+create index on uso_apps (user_id, inicio desc);
+
+revoke execute on function public.rls_auto_enable() from anon, authenticated, public;
 
 -- Itens parados: ativos sem movimento há 14 dias
-create view itens_parados as
+create view itens_parados with (security_invoker = true) as
   select * from itens
   where status = 'ativo' and ultimo_movimento < now() - interval '14 days';
