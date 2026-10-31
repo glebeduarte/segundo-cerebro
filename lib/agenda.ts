@@ -16,12 +16,16 @@ function limitesDoDia(agora = new Date()) {
 }
 
 export async function agendaDeHoje(): Promise<Compromisso[] | null> {
+  const { ini, fim } = limitesDoDia();
+  return agendaEntre(ini, fim);
+}
+
+export async function agendaEntre(ini: Date, fim: Date): Promise<Compromisso[] | null> {
   const url = process.env.GOOGLE_ICS_URL;
   if (!url) return null;
   const res = await fetch(url, { next: { revalidate: 300 } });
   if (!res.ok) throw new Error(`Agenda respondeu ${res.status}`);
   const dados = ical.sync.parseICS(await res.text());
-  const { ini, fim } = limitesDoDia();
   const conta = decodeURIComponent(url.match(/\/ical\/([^/]+)\//)?.[1] ?? "");
   const linkEvento = (uid: string, start: Date, recorrente: boolean) => {
     if (!uid.endsWith("@google.com") || !conta) return linkDoDia(start);
