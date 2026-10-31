@@ -286,3 +286,9 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
   body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom))!important}
 }
+/* menu também no topo do celular, como reserva */
+@media (max-width:900px){
+  header{flex-wrap:wrap;height:auto;padding:12px 16px 0;row-gap:10px}
+  header nav{display:flex!important;order:3;width:100%;gap:18px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
+  header nav a{white-space:nowrap;padding:6px 0}
+}

@@ -61,7 +61,7 @@ export default async function Hoje() {
   const achado = itens.length === 0
     ? "Ainda não há nada registrado. Comece pela caixa de entrada ou peça no chat para registrar um projeto."
     : comPrazo
-      ? `${comPrazo.titulo} vence em ${Math.max(0, Math.ceil((new Date(comPrazo.prazo!).getTime() - Date.now()) / DIA))} dias.`
+      ? (() => { const hojeD = new Date(hojeISO + "T00:00:00Z").getTime(); const n = Math.round((new Date(comPrazo.prazo! + "T00:00:00Z").getTime() - hojeD) / DIA); return n < 0 ? `${comPrazo.titulo} venceu há ${-n} ${n === -1 ? "dia" : "dias"}.` : n === 0 ? `${comPrazo.titulo} vence hoje.` : `${comPrazo.titulo} vence em ${n} ${n === 1 ? "dia" : "dias"}.`; })()
       : `${projetos.length} projetos ativos.`;
   const sub = parados.length ? ` ${parados.length} ${parados.length === 1 ? "projeto está parado" : "projetos estão parados"} há mais de ${LIMITE} dias.` : "";
 
