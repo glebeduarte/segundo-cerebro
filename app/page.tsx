@@ -82,7 +82,7 @@ export default async function Hoje() {
           <h1>Bom dia, Glebe<b>.</b></h1>
           <p className="finding">{achado}<span>{sub}</span></p>
           <form className="ask" action={capturar}>
-            <input id="q" name="texto" autoComplete="off" aria-label="Pergunte ou registre" placeholder="Registre uma ideia, tarefa ou pergunta" />
+            <input id="q" name="texto" autoComplete="off" aria-label="Pergunte ou registre" placeholder="Pergunte ou registre algo" />
             <button type="button" id="mic" aria-label="Falar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.7"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button>
           </form>
         </div>

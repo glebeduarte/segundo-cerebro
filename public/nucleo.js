@@ -93,13 +93,14 @@ function drawFace(t){
   for(let x=0;x<G;x++)for(let y=0;y<G;y++){const dx=x-7.5,dy=y-7.5; if(dx*dx+dy*dy<52){fx.fillStyle='rgba(255,255,255,.035)';fx.fillRect(x*P+2,y*P+2,P-4,P-4)}}
   if(mode==='icon'){drawIcon(iconName);faceTex.needsUpdate=true;return}
   const ox=Math.round(look.x*1.6), oy=Math.round(look.y*1.2);
-  const h=blink>0?1:(listening?2+Math.round((Math.sin(t/120)+1)):4);
+  const fal=listening||window.__falando;
+  const h=blink>0?1:(fal?2+Math.round((Math.sin(t/120)+1)):4);
   [[4,6],[9,6]].forEach(([ex,ey])=>{
     const top=ey+Math.floor((4-h)/2);
     for(let i=0;i<3;i++)for(let j=0;j<h;j++)px(ex+ox+i,top+oy+j,(i===1&&j===1&&h>2)?.55:1);
   });
   // mouth
-  if(listening){for(let i=0;i<4;i++){const hh=1+Math.round(Math.abs(Math.sin(t/90+i))*1.5);for(let j=0;j<hh;j++)px(6+i+ox,12-j+oy,.8)}}
+  if(fal){for(let i=0;i<4;i++){const hh=1+Math.round(Math.abs(Math.sin(t/90+i))*1.5);for(let j=0;j<hh;j++)px(6+i+ox,12-j+oy,.8)}}
   else{[[6,12],[7,13],[8,13],[9,12]].forEach(([x,y])=>px(x+ox,y+oy,.7))}
   faceTex.needsUpdate=true;
 }
@@ -267,4 +268,35 @@ document.fonts.ready.then(()=>{layout();requestAnimationFrame(tick)});
     const base=document.querySelector(`svg.links path[data-id="${c.dataset.id}"]`); if(!base||reduce)return;
     const p=base.cloneNode(); p.setAttribute('class','corre'); p.setAttribute('pathLength','100'); base.after(p);
   }));
+})();
+
+/* ---------- perguntar e registrar com o Claude ---------- */
+(function conversa(){
+  const form=document.querySelector('form.ask'), q=document.getElementById('q'), toast=document.getElementById('toast');
+  if(!form||!q||!toast)return;
+  const vozes=()=>speechSynthesis.getVoices().filter(v=>v.lang&&v.lang.toLowerCase().startsWith('pt'));
+  function falar(txt,depois){
+    if(!('speechSynthesis' in window)){depois&&depois();return}
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt); u.lang='pt-BR'; u.rate=1.05;
+    const v=vozes().find(v=>/br/i.test(v.lang))||vozes()[0]; if(v)u.voice=v;
+    window.__falando=true;
+    u.onend=u.onerror=()=>{window.__falando=false;depois&&depois()};
+    speechSynthesis.speak(u);
+  }
+  let ocupado=false;
+  form.addEventListener('submit',async e=>{
+    e.preventDefault(); const texto=q.value.trim(); if(!texto||ocupado)return;
+    ocupado=true; q.value=''; q.placeholder='Pensando…';
+    toast.innerHTML='<b>Pensando…</b><small>'+texto.replace(/[<>&]/g,'')+'</small>'; toast.classList.add('in');
+    try{
+      const r=await fetch('/api/perguntar',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({texto})});
+      const j=await r.json();
+      const resp=j.resposta||j.erro||'Não consegui responder agora.';
+      toast.innerHTML='<b>'+(j.intencao==='registro'?'Registrado':'Resposta')+'</b><small>'+resp.replace(/[<>&]/g,'')+'</small>';
+      falar(resp,()=>{ if(j.intencao==='registro'&&r.ok)location.reload(); else setTimeout(()=>toast.classList.remove('in'),4000) });
+    }catch(err){ toast.innerHTML='<b>Sem conexão</b><small>Não consegui falar com o servidor.</small>'; }
+    finally{ ocupado=false; q.placeholder='Pergunte ou registre algo'; }
+  });
+  if('speechSynthesis' in window)speechSynthesis.getVoices();
 })();
