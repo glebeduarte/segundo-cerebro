@@ -1,0 +1,127 @@
+import Script from "next/script";
+import { createClient, supabaseReady } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+type Item = {
+  id: string; tipo: string; titulo: string; resumo: string | null; status: string;
+  prazo: string | null; origem: string | null; ultimo_movimento: string; criado_em: string;
+  categorias: { nome: string } | null;
+};
+
+const LIMITE = 14;
+const DIA = 86400000;
+const diasDesde = (d: string) => Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / DIA));
+const fmtData = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Fortaleza" });
+
+async function carregar(): Promise<Item[]> {
+  if (!supabaseReady) return [];
+  const sb = await createClient();
+  const { data } = await sb.from("itens")
+    .select("id,tipo,titulo,resumo,status,prazo,origem,ultimo_movimento,criado_em,categorias(nome)")
+    .neq("status", "arquivado").order("ultimo_movimento", { ascending: false });
+  return (data as unknown as Item[]) ?? [];
+}
+
+export default async function Hoje() {
+  const itens = await carregar();
+  const projetos = itens.filter((i) => i.tipo === "projeto" && ["ativo", "pausado", "parado"].includes(i.status));
+  const parados = projetos.filter((p) => diasDesde(p.ultimo_movimento) > LIMITE);
+  const hojeISO = new Date().toLocaleDateString("en-CA", { timeZone: "America/Fortaleza" });
+  const tarefas = itens.filter((i) => i.tipo === "tarefa" && i.status !== "concluido" && (!i.prazo || i.prazo <= hojeISO));
+  const entrada = itens.filter((i) => !i.categorias && i.tipo !== "projeto");
+  const reunioes = itens.filter((i) => i.tipo === "reuniao").slice(0, 3);
+  const ideias = itens.filter((i) => i.tipo === "ideia");
+  const livros = itens.filter((i) => i.tipo === "livro" && i.status === "ativo");
+  const maisAntigo = parados.reduce((m, p) => Math.max(m, diasDesde(p.ultimo_movimento)), 0);
+  const max = Math.max(80, Math.ceil(maisAntigo / 20) * 20);
+  const comPrazo = tarefas.filter((t) => t.prazo).sort((a, b) => a.prazo!.localeCompare(b.prazo!))[0];
+
+  const achado = itens.length === 0
+    ? "Ainda não há nada registrado. Comece pela caixa de entrada ou peça no chat para registrar um projeto."
+    : comPrazo
+      ? `${comPrazo.titulo} vence em ${Math.max(0, Math.ceil((new Date(comPrazo.prazo!).getTime() - Date.now()) / DIA))} dias.`
+      : `${projetos.length} projetos ativos.`;
+  const sub = parados.length ? ` ${parados.length} ${parados.length === 1 ? "projeto está parado" : "projetos estão parados"} há mais de ${LIMITE} dias.` : "";
+
+  const areas = {
+    hoje: { n: String(tarefas.length), sub: `${tarefas.length} tarefas`, msg: tarefas[0] ? `${tarefas.length} tarefas hoje. A primeira é ${tarefas[0].titulo}.` : "Nenhuma tarefa para hoje." },
+    entrada: { n: String(entrada.length), msg: `${entrada.length} capturas esperando classificação.` },
+    projetos: { n: String(projetos.length), sub: `${projetos.length} ativos`, msg: `${projetos.length} projetos ativos.` },
+    parados: { n: String(parados.length), msg: parados[parados.length - 1] ? `${parados.length} parados. ${parados[parados.length - 1].titulo} está há ${maisAntigo} dias sem movimento.` : "Nenhum projeto parado." },
+    reunioes: { n: String(reunioes.length), msg: reunioes[0] ? `${reunioes[0].titulo}: ${reunioes[0].resumo ?? "resumo importado"}` : "Nenhuma reunião importada ainda." },
+    ideias: { n: String(ideias.length), msg: `${ideias.length} ideias guardadas.` },
+    livros: { n: String(livros.length), msg: `${livros.length} livros em leitura.` },
+    foco: { n: "—", sub: "sem dados ainda", msg: "Os registros de uso entram na fase 7." },
+  };
+
+  return (
+    <>
+      <header>
+        <span className="brand"><span className="mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.7"><circle cx="5" cy="5" r="2" /><circle cx="11" cy="11" r="2" /><path d="M6.5 6.5l3 3" /></svg></span>Segundo cérebro</span>
+        <nav><a href="#" aria-current="page">Hoje</a><a href="#painel">Projetos</a><a href="#">Mapa</a><a href="#">Vida</a><a href="#">Foco</a></nav>
+        <span className="kbd">Buscar em tudo<span>⌘ K</span></span>
+      </header>
+
+      <section className="stage" id="stage">
+        <canvas id="orb" aria-label="Núcleo do segundo cérebro. Toque para falar." />
+        <svg className="links" id="links" />
+        <div className="left">
+          <p className="date">{fmtData.format(new Date()).replace(/^./, (c) => c.toUpperCase())}</p>
+          <h1>Bom dia, Glebe<b>.</b></h1>
+          <p className="finding">{achado}<span>{sub}</span></p>
+          <form className="ask" action="#">
+            <input id="q" aria-label="Pergunte ou registre" placeholder="O que preciso fazer hoje?" />
+            <button type="button" id="mic" aria-label="Falar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.7"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button>
+          </form>
+        </div>
+        <div className="chips" id="chips" />
+        <div className="toast" id="toast" />
+        <div className="status"><span className="dot" />{supabaseReady ? "Conectado ao banco" : "Banco ainda não conectado"}</div>
+      </section>
+
+      <div className="painel" id="painel">
+        <section className="grid" aria-label="Painel">
+          <section className="panel s8" aria-labelledby="h-hoje">
+            <div className="ph"><h2 id="h-hoje">Hoje</h2><span className="pchip num">{tarefas.length}</span></div>
+            <div className="rows">
+              {tarefas.length === 0 && <p className="empty">Nenhuma tarefa com prazo para hoje.</p>}
+              {tarefas.slice(0, 6).map((t) => (
+                <div className="row" key={t.id}><span className="check" /><span className="t"><b>{t.titulo}</b><small>{t.prazo ? `Vence ${t.prazo.split("-").reverse().slice(0, 2).join("/")}` : "Sem prazo"}{t.categorias ? ` · ${t.categorias.nome}` : ""}</small></span></div>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel s4" aria-labelledby="h-reu">
+            <div className="ph"><h2 id="h-reu">Reuniões recentes</h2><span className="pchip">Granola</span></div>
+            <div className="rows">
+              {reunioes.length === 0 && <p className="empty">A importação do Granola entra na fase 4.</p>}
+              {reunioes.map((r) => <div className="row" key={r.id}><span className="t"><b>{r.titulo}</b><small>{r.resumo}</small></span></div>)}
+            </div>
+          </section>
+
+          <section className="panel s12" aria-labelledby="h-mov">
+            <div className="ph"><h2 id="h-mov">Dias desde o último movimento</h2><span className="pchip num">{projetos.length} projetos</span></div>
+            {projetos.length === 0 && <p className="empty">Nenhum projeto registrado ainda.</p>}
+            <div className="lanes">
+              {projetos.map((p) => {
+                const d = diasDesde(p.ultimo_movimento); const s = d > LIMITE;
+                return (
+                  <div className="lane" key={p.id}>
+                    <span className="n">{p.titulo}</span>
+                    <span className="track"><span className={`bar${s ? " stale" : ""}`} style={{ width: `${Math.max(2, (d / max) * 100)}%` }} /><span className="limit" style={{ left: `${(LIMITE / max) * 100}%` }} /></span>
+                    <span className={`d num${s ? " stale" : ""}`}>{d} {d === 1 ? "dia" : "dias"}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </section>
+      </div>
+
+      <script dangerouslySetInnerHTML={{ __html: `window.__AREAS__=${JSON.stringify(areas)}` }} />
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" strategy="afterInteractive" />
+      <Script src="/nucleo.js" strategy="lazyOnload" />
+    </>
+  );
+}
