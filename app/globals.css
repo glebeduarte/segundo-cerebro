@@ -296,3 +296,15 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
 .nota-leitura button.wl{font:inherit;cursor:pointer;padding:0 5px;border-radius:6px}
 .notas-topo form{margin:0}
 .notas-topo .btn{border:0;cursor:pointer}
+/* tarefas */
+.nova-tarefa{display:grid;grid-template-columns:minmax(0,2fr) 150px minmax(0,1fr) minmax(0,1.2fr) auto;gap:8px;margin-top:20px;padding:12px!important}
+.nova-tarefa input,.nova-tarefa select,.filtro select{height:38px;border:1px solid var(--control);border-radius:10px;padding:0 12px;font:inherit;background:#fff;color:var(--text);min-width:0}
+.nova-tarefa .btn{height:38px}
+.filtro{display:flex;gap:8px;margin-top:12px}
+.row.tarefa .t{flex:1;min-width:0;text-decoration:none;color:inherit}
+.row.tarefa .t:hover b{text-decoration:underline;text-underline-offset:3px}
+.row .abrir{flex:none;font-size:13px;font-weight:500;color:var(--accent);text-decoration:none;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 10px;border-radius:999px;background:#e3f0ee}
+.row .abrir.interno{background:transparent;border:1px solid var(--control);color:var(--text)}
+.row.feita b{text-decoration:line-through;color:var(--muted);font-weight:400}
+.ph h2.alerta{color:var(--warning)}
+@media (max-width:900px){.nova-tarefa{grid-template-columns:1fr 1fr}.nova-tarefa input[name=titulo],.nova-tarefa input[name=link]{grid-column:1/-1}.nova-tarefa .btn{grid-column:1/-1}.row .abrir{max-width:110px}}

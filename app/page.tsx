@@ -80,7 +80,7 @@ export default async function Hoje() {
     <>
       <header>
         <span className="brand"><span className="mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.7"><circle cx="5" cy="5" r="2" /><circle cx="11" cy="11" r="2" /><path d="M6.5 6.5l3 3" /></svg></span>Segundo cérebro</span>
-        <nav><a href="#" aria-current="page">Hoje</a><a href="#h-mov">Projetos</a><Link href="/notas">Notas</Link><Link href="/mapa">Mapa</Link><Link href="/vida">Vida</Link><a href="#">Foco</a></nav>
+        <nav><a href="#" aria-current="page">Hoje</a><a href="#h-mov">Projetos</a><Link href="/tarefas">Tarefas</Link><Link href="/notas">Notas</Link><Link href="/mapa">Mapa</Link><Link href="/vida">Vida</Link><a href="#">Foco</a></nav>
         <span className="kbd">Buscar em tudo<span>⌘ K</span></span>
       </header>
 
@@ -128,7 +128,7 @@ export default async function Hoje() {
           </section>
 
           <section className="panel s8" aria-labelledby="h-hoje">
-            <div className="ph"><h2 id="h-hoje">Hoje</h2><span className="pchip num">{tarefas.length}</span></div>
+            <div className="ph"><h2 id="h-hoje">Hoje</h2><span className="pchip num">{tarefas.length}</span><Link className="more" href="/tarefas">Todas as tarefas</Link></div>
             <div className="rows">
               {tarefas.length === 0 && <p className="empty">Nenhuma tarefa com prazo para hoje.</p>}
               {tarefas.slice(0, 6).map((t) => (

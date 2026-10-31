@@ -21,9 +21,9 @@ export async function classificar(form: FormData) {
 export async function concluir(form: FormData) {
   const id = String(form.get("id"));
   const sb = await createClient();
-  const { data } = await sb.from("itens").update({ status: "concluido" }).eq("id", id).select("pai_id").single();
+  const { data } = await sb.from("itens").update({ status: "concluido", atualizado_em: new Date().toISOString() }).eq("id", id).select("pai_id").single();
   if (data?.pai_id) await sb.from("itens").update({ ultimo_movimento: new Date().toISOString() }).eq("id", data.pai_id);
-  revalidatePath("/");
+  revalidatePath("/"); revalidatePath("/tarefas");
 }
 
 export async function arquivar(form: FormData) {
@@ -53,4 +53,25 @@ export async function novaTarefa(form: FormData) {
   await sb.from("itens").insert({ tipo: "tarefa", titulo, status: "ativo", pai_id: pai, categoria_id: p?.categoria_id ?? null, origem: "manual" });
   await sb.from("itens").update({ ultimo_movimento: new Date().toISOString() }).eq("id", pai);
   revalidatePath("/"); revalidatePath(`/item/${pai}`);
+}
+
+export async function criarTarefa(form: FormData) {
+  const titulo = String(form.get("titulo") ?? "").trim();
+  if (!titulo) return;
+  const pai = String(form.get("projeto") ?? "") || null;
+  const linkCru = String(form.get("link") ?? "").trim();
+  const link = linkCru ? (/^https?:\/\//.test(linkCru) ? linkCru : `https://${linkCru}`) : null;
+  const prazo = String(form.get("prazo") ?? "") || null;
+  const sb = await createClient();
+  let categoria_id: string | null = null;
+  if (pai) { const { data: p } = await sb.from("itens").select("categoria_id").eq("id", pai).single(); categoria_id = p?.categoria_id ?? null; }
+  await sb.from("itens").insert({ tipo: "tarefa", titulo: titulo.slice(0, 200), status: "ativo", prazo, link, pai_id: pai, categoria_id, origem: "manual" });
+  if (pai) await sb.from("itens").update({ ultimo_movimento: new Date().toISOString() }).eq("id", pai);
+  revalidatePath("/tarefas"); revalidatePath("/");
+}
+
+export async function reabrir(form: FormData) {
+  const sb = await createClient();
+  await sb.from("itens").update({ status: "ativo" }).eq("id", String(form.get("id")));
+  revalidatePath("/tarefas"); revalidatePath("/");
 }
