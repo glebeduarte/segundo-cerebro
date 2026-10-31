@@ -179,3 +179,33 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
 .item-page .campos input,.item-page .campos textarea,.painel .row.nova input{border:1px solid var(--control);border-radius:10px;padding:9px 12px;font:inherit;color:var(--text);background:#fff}
 .painel .row.nova input{flex:1;min-width:0}
 @media (max-width:900px){.item-page h1{font-size:30px}}
+/* subpáginas: mapa e vida */
+.subpagina{padding-top:28px}
+.subpagina h1{font-size:40px;line-height:1;margin:0}
+.subpagina .voltar{color:var(--muted);margin:0 0 14px}
+.subpagina .voltar a{color:inherit}
+.subpagina .meta{color:var(--text);margin:12px 0 0;max-width:760px;font-size:16px;line-height:24px}
+.ponto{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.vida-row{grid-template-columns:170px minmax(0,1fr) 44px!important}
+.numeros{display:flex;flex-wrap:wrap;gap:18px;margin:-4px 0 14px;color:var(--muted);font-size:13px}
+.numeros b{color:var(--text);font-weight:500;font-size:16px;margin-right:4px}
+.numeros .alerta b{color:var(--warning)}
+.painel a.row{display:flex}
+.grafo{position:relative}
+.grafo svg{display:block;width:100%;height:auto}
+.grafo .legenda{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+.grafo .legenda button{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--control);background:#fff;font:inherit;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--text)}
+.grafo .legenda button span{width:8px;height:8px;border-radius:50%}
+.grafo .legenda button.on{background:var(--text);color:#fff;border-color:var(--text)}
+.grafo .legenda .nota{margin-left:auto;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.grafo .anel{fill:none;stroke:var(--warning);stroke-width:1.5;stroke-dasharray:3 3}
+.grafo .legenda i.anel{width:12px;height:12px;border-radius:50%;border:1.5px dashed var(--warning)}
+.grafo .arestas line{stroke:#d3d2cc;stroke-width:1}
+.grafo .arestas line.quente{stroke:var(--accent);stroke-width:1.8}
+.grafo .arestas line.fraca{opacity:.15}
+.grafo .no{cursor:pointer;transition:opacity .2s}
+.grafo .no.fraco{opacity:.18}
+.grafo .no text{font-size:12px;fill:var(--text);paint-order:stroke;stroke:#f5f5f3;stroke-width:4px;pointer-events:none}
+.grafo .no:hover circle,.grafo .no:focus circle{stroke:var(--text);stroke-width:2}
+.grafo .no:focus{outline:none}
+@media (max-width:900px){.subpagina h1{font-size:30px}.vida-row{grid-template-columns:110px minmax(0,1fr) 36px!important}.grafo .legenda .nota{margin-left:0}}
