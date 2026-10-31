@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { destino } from "@/lib/destino";
 import { salvarItem, novaTarefa, concluir, arquivar } from "../../actions";
+import { criarNota } from "../../notas/actions";
 
 export const dynamic = "force-dynamic";
 const ROTULO: Record<string, string> = { projeto: "Projeto", tarefa: "Tarefa", ideia: "Ideia", nota: "Nota", livro: "Livro", reuniao: "Reunião", conversa: "Conversa", area: "Área", recurso: "Recurso", lazer: "Lazer" };
@@ -37,7 +38,7 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
           : <span className="aviso">Ainda não há um lugar definido para resolver isto. Cole o link abaixo.</span>}
         {i.tipo === "tarefa" && i.status !== "concluido" && <form action={concluir}><input type="hidden" name="id" value={i.id} /><button className="btn">Concluir</button></form>}
         <form action={arquivar}><input type="hidden" name="id" value={i.id} /><button className="btn">Arquivar</button></form>
-        <Link className="btn" href={`/notas/nova?pai=${i.id}`}>Nova nota</Link>
+        <form action={criarNota}><input type="hidden" name="pai" value={i.id} /><button className="btn">Nova nota</button></form>
       </div>
 
       <section className="grid">

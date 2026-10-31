@@ -292,3 +292,7 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
   header nav{display:flex!important;order:3;width:100%;gap:18px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch}
   header nav a{white-space:nowrap;padding:6px 0}
 }
+.nota-leitura .wl-form{display:inline}
+.nota-leitura button.wl{font:inherit;cursor:pointer;padding:0 5px;border-radius:6px}
+.notas-topo form{margin:0}
+.notas-topo .btn{border:0;cursor:pointer}

@@ -27,3 +27,21 @@ export async function salvarNota(n: { id: string; titulo: string; conteudo: stri
   revalidatePath("/notas", "layout");
   return { ok: true, salvoEm: agora };
 }
+
+/** Cria uma nota (vinda de um botão ou de um [[link]] novo) e abre. Só por POST, nunca por pré-carregamento de link. */
+export async function criarNota(form: FormData) {
+  const { redirect } = await import("next/navigation");
+  const sb = await createClient();
+  const titulo = String(form.get("titulo") ?? "").trim().slice(0, 140);
+  const pai = String(form.get("pai") ?? "") || null;
+  if (titulo) {
+    const { data: existe } = await sb.from("itens").select("id,tipo").eq("titulo", titulo).neq("status", "arquivado").limit(1).maybeSingle();
+    if (existe) redirect(existe.tipo === "nota" ? `/notas/${existe.id}` : `/item/${existe.id}`);
+  }
+  let categoria_id: string | null = null;
+  if (pai) { const { data: p } = await sb.from("itens").select("categoria_id").eq("id", pai).single(); categoria_id = p?.categoria_id ?? null; }
+  const t = titulo || "Nova nota";
+  const { data } = await sb.from("itens").insert({ tipo: "nota", titulo: t, conteudo: titulo ? `# ${t}\n\n` : "", status: "ativo", pai_id: pai, categoria_id, origem: "nota" }).select("id").single();
+  revalidatePath("/notas", "layout");
+  redirect(data ? `/notas/${data.id}` : "/notas");
+}

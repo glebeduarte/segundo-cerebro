@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { criarNota } from "./actions";
 
 type N = { id: string; titulo: string; pai_id: string | null; categoria_id: string | null; tags: string[]; atualizado_em: string };
 
@@ -33,7 +34,7 @@ export default async function NotasLayout({ children }: { children: React.ReactN
     <div className="notas-app">
       <aside className="notas-lado" aria-label="Notas">
         <p className="voltar"><Link href="/">← Hoje</Link></p>
-        <div className="notas-topo"><h1>Notas</h1><Link className="btn primary" href="/notas/nova">Nova nota</Link></div>
+        <div className="notas-topo"><h1>Notas</h1><form action={criarNota}><button className="btn primary">Nova nota</button></form></div>
         <form action="/notas" className="busca"><input name="q" placeholder="Buscar nas notas" aria-label="Buscar nas notas" /></form>
         {ns.length === 0 && <p className="empty">Nenhuma nota ainda.</p>}
         {grupos.map((g) => (

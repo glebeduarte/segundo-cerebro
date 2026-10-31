@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { salvarNota } from "@/app/notas/actions";
+import { salvarNota, criarNota } from "@/app/notas/actions";
 
 type Op = { id: string; nome: string };
 type Props = {
@@ -112,8 +112,8 @@ export default function Editor(p: Props) {
   const mapa = useMemo(() => new Map(p.titulos.map((t) => [t.titulo.toLowerCase(), t.href])), [p.titulos]);
   const md = useMemo(() => texto
     .replace(/\[\[([^\]|\n]+)(?:\|([^\]\n]+))?\]\]/g, (_, alvo: string, rot?: string) => {
-      const href = mapa.get(alvo.trim().toLowerCase()) ?? `/notas/nova?titulo=${encodeURIComponent(alvo.trim())}`;
-      return `[${rot ?? alvo}](${href}${mapa.has(alvo.trim().toLowerCase()) ? "" : "#novo"})`;
+      const href = mapa.get(alvo.trim().toLowerCase()) ?? `/criar?titulo=${encodeURIComponent(alvo.trim())}`;
+      return `[${rot ?? alvo}](${href})`;
     })
     .replace(/(^|\s)#([\p{L}\p{N}_-]{2,40})/gu, (_, s: string, t: string) => `${s}[#${t}](/notas?tag=${encodeURIComponent(t.toLowerCase())})`), [texto, mapa]);
 
@@ -126,8 +126,10 @@ export default function Editor(p: Props) {
   const Leitura = (
     <article className="nota-leitura">
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-        a: ({ href = "", children }) => href.startsWith("/")
-          ? <Link href={href} className={href.endsWith("#novo") ? "wl novo" : href.startsWith("/notas?tag") ? "tag" : "wl"}>{children}</Link>
+        a: ({ href = "", children }) => href.startsWith("/criar?")
+          ? <form action={criarNota} className="wl-form"><input type="hidden" name="titulo" value={decodeURIComponent(href.split("titulo=")[1] ?? "")} /><button className="wl novo" title="Criar esta nota">{children}</button></form>
+          : href.startsWith("/")
+          ? <Link href={href} prefetch={false} className={href.startsWith("/notas?tag") ? "tag" : "wl"}>{children}</Link>
           : <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>,
         input: (props) => { if (props.type !== "checkbox") return <input {...props} />; const n = ++caixa; return <input type="checkbox" checked={!!props.checked} onChange={() => alternar(n)} />; },
       }}>{md}</ReactMarkdown>
@@ -143,7 +145,7 @@ export default function Editor(p: Props) {
       <div className="ed-meta">
         <label>Área<select value={area} onChange={(e) => setArea(e.target.value)}><option value="">Sem área</option>{p.areas.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}</select></label>
         <label>Dentro de<select value={pai} onChange={(e) => setPai(e.target.value)}><option value="">Nada (nota solta)</option>{p.destinos.map((d) => <option key={d.id} value={d.id}>{d.nome}</option>)}</select></label>
-        <Link className="btn" href={`/notas/nova?pai=${p.id}`}>Nova subnota</Link>
+        <form action={criarNota}><input type="hidden" name="pai" value={p.id} /><button className="btn">Nova subnota</button></form>
         <div className="modos" role="group" aria-label="Modo">
           {(["escrever", "lado", "ler"] as Modo[]).map((m) => <button key={m} className={modo === m ? "on" : ""} onClick={() => setModo(m)}>{m === "lado" ? "Lado a lado" : m === "ler" ? "Ler" : "Escrever"}</button>)}
         </div>
