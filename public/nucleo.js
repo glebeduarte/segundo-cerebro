@@ -162,6 +162,7 @@ chips.forEach(c=>{
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ALVO={hoje:'h-hoje',entrada:'h-entrada',projetos:'h-mov',parados:'h-mov',reunioes:'h-reu',ideias:'h-ideias',livros:'h-ideias'};
 function irPara(id){
+  if(id==='foco'){location.href='/foco';return}
   const h=document.getElementById(ALVO[id]); if(!h)return;
   const panel=h.closest('.panel')||h;
   panel.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});

@@ -342,3 +342,17 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
   .grafo .zoom{bottom:auto;top:12px}
 }
 @media (prefers-reduced-motion:reduce){.grafo .detalhe{animation:none}}
+/* foco */
+.semana{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;height:220px;align-items:end}
+.semana .col{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.semana .pilha{width:100%;max-width:44px;display:flex;flex-direction:column-reverse;border-radius:8px;overflow:hidden;min-height:2px;background:#e9e9e6}
+.semana .pilha span{display:block;min-height:2px}
+.semana small{font-size:11px;color:var(--muted)}
+.legenda-classes{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 0;font-size:12px;color:var(--muted)}
+.legenda-classes i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
+.config{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:10px}
+.config summary{cursor:pointer;font-weight:500}
+.config ol{padding-left:20px;margin:10px 0;line-height:1.6}
+.config code{background:var(--surface);border-radius:6px;padding:1px 6px;font-size:12px;word-break:break-all}
+.config .campo{display:grid;gap:4px;margin:8px 0;font-size:12px;color:var(--muted)}
+.aviso-token{font-size:12px;color:var(--warning);margin:4px 0 0}
