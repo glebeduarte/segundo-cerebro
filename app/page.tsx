@@ -1,5 +1,6 @@
 import Script from "next/script";
 import { redirect } from "next/navigation";
+import { capturar, classificar, concluir, arquivar } from "./actions";
 import { createClient, supabaseReady } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -15,24 +16,26 @@ const DIA = 86400000;
 const diasDesde = (d: string) => Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / DIA));
 const fmtData = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Fortaleza" });
 
-async function carregar(): Promise<Item[]> {
-  if (!supabaseReady) return [];
+type Cat = { id: string; nome: string };
+async function carregar(): Promise<[Item[], Cat[]]> {
+  if (!supabaseReady) return [[], []];
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect("/login");
   const { data } = await sb.from("itens")
     .select("id,tipo,titulo,resumo,status,prazo,origem,ultimo_movimento,criado_em,categorias(nome)")
     .neq("status", "arquivado").order("ultimo_movimento", { ascending: false });
-  return (data as unknown as Item[]) ?? [];
+  const { data: cats } = await sb.from("categorias").select("id,nome").order("ordem");
+  return [(data as unknown as Item[]) ?? [], (cats as Cat[]) ?? []];
 }
 
 export default async function Hoje() {
-  const itens = await carregar();
+  const [itens, cats] = await carregar();
   const projetos = itens.filter((i) => i.tipo === "projeto" && ["ativo", "pausado", "parado"].includes(i.status));
   const parados = projetos.filter((p) => diasDesde(p.ultimo_movimento) > LIMITE);
   const hojeISO = new Date().toLocaleDateString("en-CA", { timeZone: "America/Fortaleza" });
   const tarefas = itens.filter((i) => i.tipo === "tarefa" && i.status !== "concluido" && (!i.prazo || i.prazo <= hojeISO));
-  const entrada = itens.filter((i) => !i.categorias && i.tipo !== "projeto");
+  const entrada = itens.filter((i) => !i.categorias && i.tipo !== "projeto" && i.status !== "concluido");
   const reunioes = itens.filter((i) => i.tipo === "reuniao").slice(0, 3);
   const ideias = itens.filter((i) => i.tipo === "ideia");
   const livros = itens.filter((i) => i.tipo === "livro" && i.status === "ativo");
@@ -73,8 +76,8 @@ export default async function Hoje() {
           <p className="date">{fmtData.format(new Date()).replace(/^./, (c) => c.toUpperCase())}</p>
           <h1>Bom dia, Glebe<b>.</b></h1>
           <p className="finding">{achado}<span>{sub}</span></p>
-          <form className="ask" action="#">
-            <input id="q" aria-label="Pergunte ou registre" placeholder="O que preciso fazer hoje?" />
+          <form className="ask" action={capturar}>
+            <input id="q" name="texto" autoComplete="off" aria-label="Pergunte ou registre" placeholder="Registre uma ideia, tarefa ou pergunta" />
             <button type="button" id="mic" aria-label="Falar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.7"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg></button>
           </form>
         </div>
@@ -85,12 +88,36 @@ export default async function Hoje() {
 
       <div className="painel" id="painel">
         <section className="grid" aria-label="Painel">
+          <section className="panel s12" aria-labelledby="h-entrada">
+            <div className="ph"><h2 id="h-entrada">Caixa de entrada</h2><span className="pchip num">{entrada.length}</span></div>
+            <div className="rows">
+              {entrada.length === 0 && <p className="empty">Tudo organizado. O que você registrar no campo do topo aparece aqui.</p>}
+              {entrada.map((e) => (
+                <div className="row inbox" key={e.id}>
+                  <span className="t"><b>{e.titulo}</b><small>{e.tipo === "reuniao" ? "Reunião sem projeto" : "Capturado"} · {new Date(e.criado_em).toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" })}</small></span>
+                  <form action={classificar} className="cls">
+                    <input type="hidden" name="id" value={e.id} />
+                    <select name="tipo" defaultValue={e.tipo === "nota" ? "tarefa" : e.tipo} aria-label="Tipo">
+                      <option value="tarefa">Tarefa</option><option value="ideia">Ideia</option><option value="projeto">Projeto</option><option value="livro">Livro</option><option value="nota">Nota</option><option value="reuniao">Reunião</option>
+                    </select>
+                    <select name="categoria" required defaultValue="" aria-label="Área">
+                      <option value="" disabled>Área</option>
+                      {cats.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                    </select>
+                    <button className="btn primary">Organizar</button>
+                  </form>
+                  <form action={arquivar}><input type="hidden" name="id" value={e.id} /><button className="btn">Arquivar</button></form>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section className="panel s8" aria-labelledby="h-hoje">
             <div className="ph"><h2 id="h-hoje">Hoje</h2><span className="pchip num">{tarefas.length}</span></div>
             <div className="rows">
               {tarefas.length === 0 && <p className="empty">Nenhuma tarefa com prazo para hoje.</p>}
               {tarefas.slice(0, 6).map((t) => (
-                <div className="row" key={t.id}><span className="check" /><span className="t"><b>{t.titulo}</b><small>{t.prazo ? `Vence ${t.prazo.split("-").reverse().slice(0, 2).join("/")}` : "Sem prazo"}{t.categorias ? ` · ${t.categorias.nome}` : ""}</small></span></div>
+                <div className="row" key={t.id}><form action={concluir}><input type="hidden" name="id" value={t.id} /><button className="check" aria-label={`Concluir ${t.titulo}`} /></form><span className="t"><b>{t.titulo}</b><small>{t.prazo ? `Vence ${t.prazo.split("-").reverse().slice(0, 2).join("/")}` : "Sem prazo"}{t.categorias ? ` · ${t.categorias.nome}` : ""}</small></span></div>
               ))}
             </div>
           </section>

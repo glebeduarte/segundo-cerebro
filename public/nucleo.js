@@ -162,7 +162,7 @@ function listen(){
   listening=!listening; mic.classList.toggle('on',!!listening); setHot(null);
   if(listening){toast.innerHTML='<b>Ouvindo…</b><small>Pergunte o que precisa fazer hoje.</small>';toast.classList.add('in');
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(SR){const r=new SR();r.lang='pt-BR';r.onresult=e=>{q.value=e.results[0][0].transcript};r.onend=()=>{if(listening)listen()};r.start()}
+    if(SR){const r=new SR();r.lang='pt-BR';r.onresult=e=>{q.value=e.results[0][0].transcript;if(listening)listen();q.form.requestSubmit()};r.onend=()=>{if(listening)listen()};r.start()}
     else setTimeout(()=>{if(listening)listen()},3500);
   } else {toast.classList.remove('in')}
 }

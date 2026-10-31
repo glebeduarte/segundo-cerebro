@@ -128,3 +128,8 @@ svg.links circle.hot{fill:var(--accent)}
 .login form{width:100%;max-width:380px;display:grid;gap:12px}
 .login input{height:44px;border:1px solid #d6d6d1;border-radius:12px;padding:0 14px;font:inherit;font-size:15px}
 .login button{height:44px;border-radius:999px;border:0;background:#1c1d1b;color:#fff;font:inherit;font-weight:500;cursor:pointer}
+.painel button.check{padding:0;cursor:pointer}
+.painel button.check:hover{border-color:var(--accent);background:#e3f0ee}
+.painel .row form{display:flex;gap:8px;align-items:center}
+.painel .cls select{height:32px;border:1px solid var(--control);border-radius:999px;padding:0 10px;background:#fff;font:inherit;font-size:13px;color:var(--text)}
+@media (max-width:900px){.painel .row.inbox{flex-wrap:wrap}.painel .row.inbox .t{flex-basis:100%}.painel .cls{flex-wrap:wrap}}
