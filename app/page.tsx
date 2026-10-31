@@ -1,5 +1,6 @@
 import Script from "next/script";
 import { redirect } from "next/navigation";
+import { agendaDeHoje, type Compromisso } from "@/lib/agenda";
 import { capturar, classificar, concluir, arquivar } from "./actions";
 import { createClient, supabaseReady } from "@/lib/supabase/server";
 
@@ -31,6 +32,10 @@ async function carregar(): Promise<[Item[], Cat[]]> {
 
 export default async function Hoje() {
   const [itens, cats] = await carregar();
+  let agenda: Compromisso[] | null = null, erroAgenda = false;
+  try { agenda = await agendaDeHoje(); } catch { erroAgenda = true; }
+  const hora = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Fortaleza" });
+  const proximo = agenda?.find((c) => !c.diaInteiro && +c.fim > Date.now());
   const projetos = itens.filter((i) => i.tipo === "projeto" && ["ativo", "pausado", "parado"].includes(i.status));
   const parados = projetos.filter((p) => diasDesde(p.ultimo_movimento) > LIMITE);
   const hojeISO = new Date().toLocaleDateString("en-CA", { timeZone: "America/Fortaleza" });
@@ -51,7 +56,7 @@ export default async function Hoje() {
   const sub = parados.length ? ` ${parados.length} ${parados.length === 1 ? "projeto está parado" : "projetos estão parados"} há mais de ${LIMITE} dias.` : "";
 
   const areas = {
-    hoje: { n: String(tarefas.length), sub: `${tarefas.length} tarefas`, msg: tarefas[0] ? `${tarefas.length} tarefas hoje. A primeira é ${tarefas[0].titulo}.` : "Nenhuma tarefa para hoje." },
+    hoje: { n: String(tarefas.length), sub: `${tarefas.length} tarefas · ${agenda ? agenda.length : 0} compromissos`, msg: `${tarefas.length} tarefas hoje.${proximo ? ` Próximo compromisso: ${proximo.titulo} às ${hora(proximo.inicio)}.` : agenda ? " Sem compromissos pela frente." : ""}` },
     entrada: { n: String(entrada.length), msg: `${entrada.length} capturas esperando classificação.` },
     projetos: { n: String(projetos.length), sub: `${projetos.length} ativos`, msg: `${projetos.length} projetos ativos.` },
     parados: { n: String(parados.length), msg: parados[parados.length - 1] ? `${parados.length} parados. ${parados[parados.length - 1].titulo} está há ${maisAntigo} dias sem movimento.` : "Nenhum projeto parado." },
@@ -122,6 +127,21 @@ export default async function Hoje() {
             </div>
           </section>
 
+          <section className="panel s4" aria-labelledby="h-agenda">
+            <div className="ph"><h2 id="h-agenda">Agenda</h2><span className="pchip num">{agenda?.length ?? 0}</span></div>
+            <div className="rows">
+              {agenda === null && !erroAgenda && <p className="empty">Agenda ainda não conectada.</p>}
+              {erroAgenda && <p className="empty">Não consegui ler a agenda agora. Tento de novo em alguns minutos.</p>}
+              {agenda?.length === 0 && <p className="empty">Nenhum compromisso hoje.</p>}
+              {agenda?.map((c) => (
+                <div className="row" key={c.id} style={+c.fim < Date.now() ? { opacity: .5 } : undefined}>
+                  <span className="time num">{c.diaInteiro ? "Dia" : hora(c.inicio)}</span>
+                  <span className="t"><b>{c.titulo}</b><small>{c.diaInteiro ? "Dia inteiro" : `até ${hora(c.fim)}`}{c.local ? ` · ${c.local}` : ""}</small></span>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section className="panel s4" aria-labelledby="h-reu">
             <div className="ph"><h2 id="h-reu">Reuniões recentes</h2><span className="pchip">Granola</span></div>
             <div className="rows">
@@ -130,7 +150,7 @@ export default async function Hoje() {
             </div>
           </section>
 
-          <section className="panel s12" aria-labelledby="h-mov">
+          <section className="panel s8" aria-labelledby="h-mov">
             <div className="ph"><h2 id="h-mov">Dias desde o último movimento</h2><span className="pchip num">{projetos.length} projetos</span></div>
             {projetos.length === 0 && <p className="empty">Nenhum projeto registrado ainda.</p>}
             <div className="lanes">
