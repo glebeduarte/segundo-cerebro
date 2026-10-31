@@ -1,6 +1,8 @@
 import Script from "next/script";
 import { redirect } from "next/navigation";
-import { agendaDeHoje, type Compromisso } from "@/lib/agenda";
+import { agendaDeHoje, linkDoDia, type Compromisso } from "@/lib/agenda";
+import { destino } from "@/lib/destino";
+import Link from "next/link";
 import { capturar, classificar, concluir, arquivar } from "./actions";
 import { createClient, supabaseReady } from "@/lib/supabase/server";
 
@@ -8,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 type Item = {
   id: string; tipo: string; titulo: string; resumo: string | null; status: string;
-  prazo: string | null; origem: string | null; ultimo_movimento: string; criado_em: string;
+  prazo: string | null; origem: string | null; origem_ref: string | null; link: string | null; pai_id: string | null; ultimo_movimento: string; criado_em: string;
   categorias: { nome: string } | null;
 };
 
@@ -24,7 +26,7 @@ async function carregar(): Promise<[Item[], Cat[]]> {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect("/login");
   const { data } = await sb.from("itens")
-    .select("id,tipo,titulo,resumo,status,prazo,origem,ultimo_movimento,criado_em,categorias(nome)")
+    .select("id,tipo,titulo,resumo,status,prazo,origem,origem_ref,link,pai_id,ultimo_movimento,criado_em,categorias(nome)")
     .neq("status", "arquivado").order("ultimo_movimento", { ascending: false });
   const { data: cats } = await sb.from("categorias").select("id,nome").order("ordem");
   return [(data as unknown as Item[]) ?? [], (cats as Cat[]) ?? []];
@@ -32,6 +34,14 @@ async function carregar(): Promise<[Item[], Cat[]]> {
 
 export default async function Hoje() {
   const [itens, cats] = await carregar();
+  const pais = new Map(itens.filter((i) => i.tipo === "projeto").map((p) => [p.id, p]));
+  const Vai = ({ i, children }: { i: Item; children: React.ReactNode }) => {
+    const d = destino(i, pais);
+    return d.externo
+      ? <a className="vai" href={d.href} target="_blank" rel="noopener noreferrer">{children}<svg className="seta" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5" /></svg></a>
+      : <Link className="vai" href={d.href}>{children}</Link>;
+  };
+  const Info = ({ i }: { i: Item }) => <Link className="info" href={`/item/${i.id}`} aria-label={`Detalhes de ${i.titulo}`}><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="1.2" /><circle cx="8" cy="8" r="1.2" /><circle cx="13" cy="8" r="1.2" /></svg></Link>;
   let agenda: Compromisso[] | null = null, erroAgenda = false;
   try { agenda = await agendaDeHoje(); } catch { erroAgenda = true; }
   const hora = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Fortaleza" });
@@ -99,7 +109,7 @@ export default async function Hoje() {
               {entrada.length === 0 && <p className="empty">Tudo organizado. O que você registrar no campo do topo aparece aqui.</p>}
               {entrada.map((e) => (
                 <div className="row inbox" key={e.id}>
-                  <span className="t"><b>{e.titulo}</b><small>{e.tipo === "reuniao" ? "Reunião sem projeto" : "Capturado"} · {new Date(e.criado_em).toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" })}</small></span>
+                  <span className="t"><Vai i={e}><b>{e.titulo}</b></Vai><small>{e.tipo === "reuniao" ? "Reunião sem projeto" : "Capturado"} · {new Date(e.criado_em).toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza" })}</small></span>
                   <form action={classificar} className="cls">
                     <input type="hidden" name="id" value={e.id} />
                     <select name="tipo" defaultValue={e.tipo === "nota" ? "tarefa" : e.tipo} aria-label="Tipo">
@@ -122,22 +132,22 @@ export default async function Hoje() {
             <div className="rows">
               {tarefas.length === 0 && <p className="empty">Nenhuma tarefa com prazo para hoje.</p>}
               {tarefas.slice(0, 6).map((t) => (
-                <div className="row" key={t.id}><form action={concluir}><input type="hidden" name="id" value={t.id} /><button className="check" aria-label={`Concluir ${t.titulo}`} /></form><span className="t"><b>{t.titulo}</b><small>{t.prazo ? `Vence ${t.prazo.split("-").reverse().slice(0, 2).join("/")}` : "Sem prazo"}{t.categorias ? ` · ${t.categorias.nome}` : ""}</small></span></div>
+                <div className="row" key={t.id}><form action={concluir}><input type="hidden" name="id" value={t.id} /><button className="check" aria-label={`Concluir ${t.titulo}`} /></form><span className="t"><Vai i={t}><b>{t.titulo}</b></Vai><small>{t.prazo ? `Vence ${t.prazo.split("-").reverse().slice(0, 2).join("/")}` : "Sem prazo"}{t.pai_id && pais.get(t.pai_id) ? ` · ${pais.get(t.pai_id)!.titulo}` : t.categorias ? ` · ${t.categorias.nome}` : ""}</small></span><Info i={t} /></div>
               ))}
             </div>
           </section>
 
           <section className="panel s4" aria-labelledby="h-agenda">
-            <div className="ph"><h2 id="h-agenda">Agenda</h2><span className="pchip num">{agenda?.length ?? 0}</span></div>
+            <div className="ph"><h2 id="h-agenda">Agenda</h2><span className="pchip num">{agenda?.length ?? 0}</span><a className="more" href={linkDoDia()} target="_blank" rel="noopener noreferrer">Abrir agenda</a></div>
             <div className="rows">
               {agenda === null && !erroAgenda && <p className="empty">Agenda ainda não conectada.</p>}
               {erroAgenda && <p className="empty">Não consegui ler a agenda agora. Tento de novo em alguns minutos.</p>}
               {agenda?.length === 0 && <p className="empty">Nenhum compromisso hoje.</p>}
               {agenda?.map((c) => (
-                <div className="row" key={c.id} style={+c.fim < Date.now() ? { opacity: .5 } : undefined}>
+                <a className="row" href={c.link} target="_blank" rel="noopener noreferrer" key={c.id} style={+c.fim < Date.now() ? { opacity: .5 } : undefined}>
                   <span className="time num">{c.diaInteiro ? "Dia" : hora(c.inicio)}</span>
                   <span className="t"><b>{c.titulo}</b><small>{c.diaInteiro ? "Dia inteiro" : `até ${hora(c.fim)}`}{c.local ? ` · ${c.local}` : ""}</small></span>
-                </div>
+                </a>
               ))}
             </div>
           </section>
@@ -146,7 +156,7 @@ export default async function Hoje() {
             <div className="ph"><h2 id="h-reu">Reuniões recentes</h2><span className="pchip">Granola</span></div>
             <div className="rows">
               {reunioes.length === 0 && <p className="empty">A importação do Granola entra na fase 4.</p>}
-              {reunioes.map((r) => <div className="row" key={r.id}><span className="t"><b>{r.titulo}</b><small>{r.resumo}</small></span></div>)}
+              {reunioes.map((r) => <div className="row" key={r.id}><span className="t"><Vai i={r}><b>{r.titulo}</b></Vai><small>{r.resumo}</small></span><Info i={r} /></div>)}
             </div>
           </section>
 
@@ -158,7 +168,7 @@ export default async function Hoje() {
                 const d = diasDesde(p.ultimo_movimento); const s = d > LIMITE;
                 return (
                   <div className={`lane${diasDesde(p.ultimo_movimento) > LIMITE ? " is-stale" : ""}`} key={p.id}>
-                    <span className="n">{p.titulo}</span>
+                    <span className="n"><Link href={`/item/${p.id}`}>{p.titulo}</Link></span>
                     <span className="track"><span className={`bar${s ? " stale" : ""}`} style={{ width: `${Math.max(2, (d / max) * 100)}%` }} /><span className="limit" style={{ left: `${(LIMITE / max) * 100}%` }} /></span>
                     <span className={`d num${s ? " stale" : ""}`}>{d} {d === 1 ? "dia" : "dias"}</span>
                   </div>
@@ -170,7 +180,7 @@ export default async function Hoje() {
             <div className="ph"><h2 id="h-ideias">Ideias e leituras</h2><span className="pchip num">{ideias.length + livros.length}</span></div>
             <div className="rows">
               {ideias.length + livros.length === 0 && <p className="empty">Nenhuma ideia ou livro ainda. Registre no campo do topo e organize como Ideia ou Livro.</p>}
-              {[...livros, ...ideias].slice(0, 8).map((i) => <div className="row" key={i.id}><span className="t"><b>{i.titulo}</b><small>{i.tipo === "livro" ? "Livro em leitura" : "Ideia"}{i.categorias ? ` · ${i.categorias.nome}` : ""}</small></span><form action={arquivar}><input type="hidden" name="id" value={i.id} /><button className="btn">Arquivar</button></form></div>)}
+              {[...livros, ...ideias].slice(0, 8).map((i) => <div className="row" key={i.id}><span className="t"><Vai i={i}><b>{i.titulo}</b></Vai><small>{i.tipo === "livro" ? "Livro em leitura" : "Ideia"}{i.categorias ? ` · ${i.categorias.nome}` : ""}</small></span><form action={arquivar}><input type="hidden" name="id" value={i.id} /><button className="btn">Arquivar</button></form></div>)}
             </div>
           </section>
         </section>

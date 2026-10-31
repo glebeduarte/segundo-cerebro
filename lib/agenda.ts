@@ -1,6 +1,11 @@
 import ical, { type VEvent } from "node-ical";
 
-export type Compromisso = { id: string; titulo: string; inicio: Date; fim: Date; diaInteiro: boolean; local?: string };
+export type Compromisso = { id: string; titulo: string; inicio: Date; fim: Date; diaInteiro: boolean; local?: string; link: string };
+
+export function linkDoDia(d = new Date()) {
+  const l = new Date(d.getTime() + OFFSET * 3600000);
+  return `https://calendar.google.com/calendar/r/day/${l.getUTCFullYear()}/${l.getUTCMonth() + 1}/${l.getUTCDate()}`;
+}
 
 const OFFSET = -3; // America/Fortaleza, sem horário de verão
 
@@ -17,6 +22,13 @@ export async function agendaDeHoje(): Promise<Compromisso[] | null> {
   if (!res.ok) throw new Error(`Agenda respondeu ${res.status}`);
   const dados = ical.sync.parseICS(await res.text());
   const { ini, fim } = limitesDoDia();
+  const conta = decodeURIComponent(url.match(/\/ical\/([^/]+)\//)?.[1] ?? "");
+  const linkEvento = (uid: string, start: Date, recorrente: boolean) => {
+    if (!uid.endsWith("@google.com") || !conta) return linkDoDia(start);
+    let id = uid.replace("@google.com", "");
+    if (recorrente) id += "_" + start.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+    return `https://calendar.google.com/calendar/event?eid=${Buffer.from(`${id} ${conta}`).toString("base64").replace(/=+$/, "")}`;
+  };
   const lista: Compromisso[] = [];
 
   for (const ev of Object.values(dados)) {
@@ -27,7 +39,7 @@ export async function agendaDeHoje(): Promise<Compromisso[] | null> {
     const diaInteiro = (e.datetype as string) === "date";
     type Src = { summary?: unknown; location?: unknown };
     const add = (start: Date, src: Src) =>
-      lista.push({ id: `${e.uid}-${+start}`, titulo: String((src.summary as { val?: string })?.val ?? src.summary ?? "Sem título"), inicio: start, fim: new Date(+start + dur), diaInteiro, local: src.location ? String((src.location as { val?: string })?.val ?? src.location) : undefined });
+      lista.push({ id: `${e.uid}-${+start}`, titulo: String((src.summary as { val?: string })?.val ?? src.summary ?? "Sem título"), inicio: start, fim: new Date(+start + dur), diaInteiro, local: src.location ? String((src.location as { val?: string })?.val ?? src.location) : undefined, link: linkEvento(String(e.uid), start, Boolean(e.rrule)) });
 
     if (e.rrule) {
       for (const d of e.rrule.between(new Date(+ini - dur), fim, true)) {

@@ -150,3 +150,32 @@ header .som{margin-left:12px;width:34px;height:34px;border-radius:50%;border:1px
 header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
 @media (max-width:900px){header .som{margin-left:auto}}
 @media (prefers-reduced-motion:reduce){svg.links path.corre{display:none}}
+/* hub: cada item leva aonde é resolvido */
+.painel a.vai{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:6px;max-width:100%}
+.painel a.vai b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.painel a.vai:hover b{text-decoration:underline;text-underline-offset:3px}
+.painel a.vai .seta{width:12px;height:12px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.6;opacity:0;transition:opacity .15s}
+.painel a.vai:hover .seta,.painel a.vai:focus .seta{opacity:1}
+.painel a.row{text-decoration:none;color:var(--text)}
+.painel a.row:hover{border-color:var(--accent)}
+.painel .info{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.painel .info:hover{background:var(--surface)}
+.painel .info svg{width:16px;height:16px;fill:currentColor}
+.painel .lane .n a{color:inherit;text-decoration:none}
+.painel .lane .n a:hover{text-decoration:underline;text-underline-offset:3px}
+.painel .ph .more{margin-left:auto;font-size:13px;color:var(--muted);text-decoration:none}
+.painel .ph .more:hover{color:var(--text)}
+@media (hover:none){.painel a.vai .seta{opacity:1}}
+.item-page{padding-top:28px}
+.item-page .voltar{color:var(--muted);margin:0 0 14px}
+.item-page .voltar a{color:inherit}
+.item-page h1{font-size:40px;line-height:1;margin:0}
+.item-page .meta{color:var(--muted);margin:10px 0 0}
+.item-page .acoes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:20px 0 28px}
+.item-page .btn.grande{height:42px;padding:0 20px;font-size:15px;display:inline-flex;align-items:center;text-decoration:none}
+.item-page .aviso{color:var(--warning)}
+.item-page .campos{display:grid;gap:12px}
+.item-page .campos label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+.item-page .campos input,.item-page .campos textarea,.painel .row.nova input{border:1px solid var(--control);border-radius:10px;padding:9px 12px;font:inherit;color:var(--text);background:#fff}
+.painel .row.nova input{flex:1;min-width:0}
+@media (max-width:900px){.item-page h1{font-size:30px}}

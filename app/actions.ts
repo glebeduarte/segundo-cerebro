@@ -31,3 +31,26 @@ export async function arquivar(form: FormData) {
   await sb.from("itens").update({ status: "arquivado" }).eq("id", String(form.get("id")));
   revalidatePath("/");
 }
+
+export async function salvarItem(form: FormData) {
+  const id = String(form.get("id"));
+  const link = String(form.get("link") ?? "").trim();
+  const prazo = String(form.get("prazo") ?? "").trim();
+  const resumo = String(form.get("resumo") ?? "").trim();
+  const sb = await createClient();
+  await sb.from("itens").update({
+    link: link ? (/^https?:\/\//.test(link) ? link : `https://${link}`) : null,
+    prazo: prazo || null, resumo: resumo || null, ultimo_movimento: new Date().toISOString(),
+  }).eq("id", id);
+  revalidatePath("/"); revalidatePath(`/item/${id}`);
+}
+
+export async function novaTarefa(form: FormData) {
+  const pai = String(form.get("pai")), titulo = String(form.get("titulo") ?? "").trim();
+  if (!titulo) return;
+  const sb = await createClient();
+  const { data: p } = await sb.from("itens").select("categoria_id").eq("id", pai).single();
+  await sb.from("itens").insert({ tipo: "tarefa", titulo, status: "ativo", pai_id: pai, categoria_id: p?.categoria_id ?? null, origem: "manual" });
+  await sb.from("itens").update({ ultimo_movimento: new Date().toISOString() }).eq("id", pai);
+  revalidatePath("/"); revalidatePath(`/item/${pai}`);
+}
