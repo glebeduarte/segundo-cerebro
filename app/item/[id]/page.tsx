@@ -6,7 +6,7 @@ import { salvarItem, novaTarefa, concluir, arquivar } from "../../actions";
 import { criarNota } from "../../notas/actions";
 
 export const dynamic = "force-dynamic";
-const ROTULO: Record<string, string> = { projeto: "Projeto", tarefa: "Tarefa", ideia: "Ideia", nota: "Nota", livro: "Livro", reuniao: "Reunião", conversa: "Conversa", area: "Área", recurso: "Recurso", lazer: "Lazer" };
+const ROTULO: Record<string, string> = { area: "Núcleo", projeto: "Projeto", tarefa: "Tarefa", ideia: "Ideia", nota: "Nota", livro: "Livro", reuniao: "Reunião", conversa: "Conversa", recurso: "Recurso", lazer: "Lazer" };
 const data = (d: string) => new Date(d).toLocaleDateString("pt-BR", { timeZone: "America/Fortaleza", day: "numeric", month: "short" });
 
 export default async function ItemPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,6 +21,9 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
     sb.from("itens").select("id,tipo,titulo,resumo,status,prazo,link,origem_ref,pai_id,ultimo_movimento").eq("pai_id", id).neq("status", "arquivado").order("ultimo_movimento", { ascending: false }),
     i.pai_id ? sb.from("itens").select("id,titulo,link").eq("id", i.pai_id).single() : Promise.resolve({ data: null }),
   ]);
+  const { data: conx } = await sb.from("conexoes").select("de_id,para_id,relacao").or(`de_id.eq.${id},para_id.eq.${id}`);
+  const outrosIds = (conx ?? []).map((c) => (c.de_id === id ? c.para_id : c.de_id));
+  const { data: conectados } = outrosIds.length ? await sb.from("itens").select("id,tipo,titulo,ultimo_movimento,status").in("id", outrosIds).neq("status", "arquivado").order("titulo") : { data: [] };
   const pais = new Map(pai ? [[pai.id, pai]] : []);
   const d = destino(i, pais);
   const tarefas = (filhos ?? []).filter((f) => f.tipo === "tarefa" && f.status !== "concluido");
@@ -72,6 +75,18 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
             <button className="btn primary">Salvar</button>
           </form>
         </section>
+
+        {(conectados?.length ?? 0) > 0 && (
+          <section className="panel s12" aria-labelledby="h-con">
+            <div className="ph"><h2 id="h-con">Conectados</h2><span className="pchip num">{conectados!.length}</span></div>
+            <div className="rows">
+              {conectados!.map((c) => {
+                const d = Math.floor((Date.now() - +new Date(c.ultimo_movimento)) / 86400000);
+                return <Link className="row" key={c.id} href={c.tipo === "nota" ? `/notas/${c.id}` : `/item/${c.id}`} prefetch={false}><span className="t"><b>{c.titulo}</b><small>{ROTULO[c.tipo] ?? c.tipo} · {d === 0 ? "movimento hoje" : `${d} dias sem movimento`}</small></span></Link>;
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="panel s12" aria-labelledby="h-hist">
           <div className="ph"><h2 id="h-hist">Reuniões, conversas e concluídos</h2><span className="pchip num">{outros.length}</span></div>

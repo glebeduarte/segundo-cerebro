@@ -10,8 +10,8 @@ export default async function Mapa() {
   const nome = (id: string | null) => cats.find((c) => c.id === id)?.nome ?? null;
   const vivos = itens.filter((i) => i.status !== "concluido" || i.tipo === "reuniao" || i.tipo === "conversa");
   const filhos = (id: string) => vivos.filter((i) => i.pai_id === id).length;
-  const nos: No[] = vivos.filter((i) => ["projeto", "tarefa", "reuniao", "conversa", "ideia", "livro"].includes(i.tipo) && (i.tipo === "projeto" || i.pai_id))
-    .map((i) => ({ id: i.id, titulo: i.titulo, tipo: i.tipo, area: nome(i.categoria_id), cor: cor(i.categoria_id), parado: i.tipo === "projeto" && i.status === "ativo" && diasDesde(i.ultimo_movimento) > 14, peso: filhos(i.id),
+  const nos: No[] = vivos.filter((i) => ["area", "projeto", "tarefa", "reuniao", "conversa", "ideia", "livro"].includes(i.tipo) && (i.tipo === "projeto" || i.tipo === "area" || i.pai_id))
+    .map((i) => ({ id: i.id, titulo: i.titulo, tipo: i.tipo, area: nome(i.categoria_id), cor: i.tipo === "area" ? "#1c1d1b" : cor(i.categoria_id), parado: i.tipo === "projeto" && i.status === "ativo" && diasDesde(i.ultimo_movimento) > 14, peso: filhos(i.id) + conexoes.filter((c) => c.de_id === i.id || c.para_id === i.id).length,
       dias: diasDesde(i.ultimo_movimento), prazo: i.prazo, resumo: i.resumo, status: i.status,
       link: i.link ?? (i.origem_ref?.startsWith("http") ? i.origem_ref.split("#")[0] : null),
       pai: i.pai_id ? vivos.find((v) => v.id === i.pai_id)?.titulo ?? null : null,

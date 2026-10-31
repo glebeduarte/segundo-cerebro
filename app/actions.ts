@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { conectarNoContexto } from "@/lib/nucleo";
 
 export async function capturar(form: FormData) {
   const texto = String(form.get("texto") ?? "").trim();
@@ -15,6 +16,7 @@ export async function classificar(form: FormData) {
   const status = tipo === "tarefa" || tipo === "projeto" ? "ativo" : "ideia";
   const sb = await createClient();
   await sb.from("itens").update({ tipo, categoria_id, status, ultimo_movimento: new Date().toISOString() }).eq("id", id);
+  await conectarNoContexto(sb, id);
   revalidatePath("/");
 }
 

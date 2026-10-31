@@ -11,9 +11,9 @@ export type Aresta = { de: string; para: string };
 type N = No & SimulationNodeDatum;
 type Vista = { k: number; x: number; y: number };
 
-const ROTULO: Record<string, string> = { projeto: "Projeto", tarefa: "Tarefa", reuniao: "Reunião", conversa: "Conversa", ideia: "Ideia", livro: "Livro", nota: "Nota" };
+const ROTULO: Record<string, string> = { area: "Núcleo", projeto: "Projeto", tarefa: "Tarefa", reuniao: "Reunião", conversa: "Conversa", ideia: "Ideia", livro: "Livro", nota: "Nota" };
 const MIN = 0.4, MAX = 4;
-const raio = (n: No) => (n.tipo === "projeto" ? 9 + Math.min(10, n.peso * 1.6) : n.tipo === "reuniao" ? 5 : 4);
+const raio = (n: No) => (n.tipo === "area" ? 22 : n.tipo === "projeto" ? 9 + Math.min(10, n.peso * 1.6) : n.tipo === "reuniao" ? 5 : 4);
 
 export default function Grafo({ nos, arestas, areas }: { nos: No[]; arestas: Aresta[]; areas: { nome: string; cor: string }[] }) {
   const caixa = useRef<HTMLDivElement>(null);
@@ -46,8 +46,8 @@ export default function Grafo({ nos, arestas, areas }: { nos: No[]; arestas: Are
       .force("link", forceLink(ls).id((d) => (d as N).id).distance(46).strength(0.7))
       .force("carga", forceManyBody().strength(-90))
       .force("centro", forceCenter(dim.w / 2, dim.h / 2))
-      .force("x", forceX<N>((n) => dim.w / 2 + Math.cos(ang(n)) * R).strength(0.06))
-      .force("y", forceY<N>((n) => dim.h / 2 + Math.sin(ang(n)) * R).strength(0.06))
+      .force("x", forceX<N>((n) => n.tipo === "area" ? dim.w / 2 : dim.w / 2 + Math.cos(ang(n)) * R).strength((n) => (n.tipo === "area" ? 0.5 : 0.06)))
+      .force("y", forceY<N>((n) => n.tipo === "area" ? dim.h / 2 : dim.h / 2 + Math.sin(ang(n)) * R).strength((n) => (n.tipo === "area" ? 0.5 : 0.06)))
       .force("colide", forceCollide<N>((n) => raio(n) + 4));
     if (reduz) { sim.stop(); for (let i = 0; i < 300; i++) sim.tick(); setPos([...ns]); }
     else sim.on("tick", () => setPos([...ns]));
@@ -132,8 +132,8 @@ export default function Grafo({ nos, arestas, areas }: { nos: No[]; arestas: Are
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSel(n.id); } if (e.key === "Escape") setSel(null); }}
                 tabIndex={0} role="button" aria-pressed={sel === n.id} aria-label={`${n.titulo}, ${ROTULO[n.tipo] ?? n.tipo}`}>
                 {n.parado && <circle r={raio(n) + 4} className="anel" vectorEffect="non-scaling-stroke" />}
-                <circle r={raio(n)} fill={n.tipo === "projeto" ? n.cor : "#fff"} stroke={n.cor} strokeWidth={n.tipo === "projeto" ? 0 : 1.6} vectorEffect="non-scaling-stroke" />
-                {(n.tipo === "projeto" || ativo === n.id || vista.k > 1.8) && (
+                <circle r={raio(n)} fill={n.tipo === "projeto" || n.tipo === "area" ? n.cor : "#fff"} stroke={n.cor} strokeWidth={n.tipo === "projeto" || n.tipo === "area" ? 0 : 1.6} vectorEffect="non-scaling-stroke" />
+                {(n.tipo === "projeto" || n.tipo === "area" || ativo === n.id || vista.k > 1.8) && (
                   <text y={raio(n) + 13 / Math.max(1, vista.k * 0.8)} textAnchor="middle" style={{ fontSize: 12 / Math.max(1, vista.k * 0.8) }}>{n.titulo.length > 26 ? n.titulo.slice(0, 25) + "…" : n.titulo}</text>
                 )}
               </g>
@@ -157,7 +157,7 @@ export default function Grafo({ nos, arestas, areas }: { nos: No[]; arestas: Are
             <dl>
               <div><dt>Último movimento</dt><dd className={s.dias > 14 && s.tipo === "projeto" ? "alerta" : ""}>{s.dias === 0 ? "hoje" : `há ${s.dias} ${s.dias === 1 ? "dia" : "dias"}`}</dd></div>
               {s.prazo && <div><dt>Prazo</dt><dd>{s.prazo.split("-").reverse().join("/")}</dd></div>}
-              {s.tipo === "projeto" && <div><dt>Tarefas abertas</dt><dd className="num">{s.abertas}</dd></div>}
+              {(s.tipo === "projeto") && <div><dt>Tarefas abertas</dt><dd className="num">{s.abertas}</dd></div>}
               <div><dt>Ligações</dt><dd className="num">{ligados.length}</dd></div>
               {s.status === "concluido" && <div><dt>Situação</dt><dd>concluído</dd></div>}
             </dl>

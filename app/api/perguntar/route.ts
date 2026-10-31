@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { FERRAMENTAS, executar } from "@/lib/contexto";
+import { conectarNoContexto } from "@/lib/nucleo";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -18,6 +19,7 @@ const REGISTRAR = {
       area: { type: "string", description: "Nome exato de uma das áreas, ou vazio" },
       projeto: { type: "string", description: "Título exato de um projeto existente, ou vazio" },
       prazo: { type: "string", description: "AAAA-MM-DD se ele citou data" },
+      relacionados: { type: "array", items: { type: "string" }, description: "Títulos exatos de projetos, pessoas ou notas existentes a que isto se liga" },
     },
     required: ["tipo", "titulo"],
   },
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
 
   const sistema = `Você é o segundo cérebro de Glebe Duarte, mentor de negócios em Natal. Você conhece a agenda dele (Google Agenda), as reuniões gravadas no Granola com resumo completo, projetos, tarefas, ideias e conversas registradas.
 Para responder, busque os dados com as ferramentas antes de afirmar qualquer coisa. Exemplos: "próxima reunião" → agenda; "o que levar para a reunião com X" → agenda para achar a próxima com X, depois buscar a última reunião com X e abrir o resumo completo, e responder com pendências e próximos passos que ficaram dela; "como está o projeto Y" → buscar e abrir.
-Se ele quiser anotar algo, use registrar.
+Se ele quiser anotar algo, use registrar já entendendo o contexto: escolha a área e o projeto certos pela lista de projetos e pelo assunto (um cliente novo vai para a área Clientes; algo sobre um cliente existente vai dentro do projeto dele), e preencha relacionados com os títulos exatos de outros itens citados. Na dúvida sobre a qual projeto pertence, use buscar antes de registrar.
 Se o dado não existir, diga que não está registrado e onde ele pode estar. Nunca invente nomes, datas ou números.
 A resposta final será lida em voz alta: português do Brasil, tom direto, sem travessões, sem emoji, sem listas ou marcadores, no máximo 4 frases e 80 palavras.
 
@@ -104,12 +106,13 @@ async function registrar(
   const cat = cats.find((c) => c.nome.toLowerCase() === String(g.area ?? "").toLowerCase());
   const pai = projetos.find((p) => p.titulo.toLowerCase() === String(g.projeto ?? "").toLowerCase());
   const prazo = /^\d{4}-\d{2}-\d{2}$/.test(String(g.prazo ?? "")) ? String(g.prazo) : null;
-  const { error } = await sb.from("itens").insert({
+  const { data: novo, error } = await sb.from("itens").insert({
     tipo, titulo, conteudo: pedido, prazo, origem: "voz",
     status: tipo === "tarefa" || tipo === "projeto" ? "ativo" : "ideia",
     categoria_id: cat?.id ?? pai?.categoria_id ?? null, pai_id: pai?.id ?? null,
-  });
-  if (error) return `Falhou ao gravar: ${error.message}`;
+  }).select("id").single();
+  if (error || !novo) return `Falhou ao gravar: ${error?.message}`;
+  await conectarNoContexto(sb, novo.id, Array.isArray(g.relacionados) ? (g.relacionados as string[]) : []);
   if (pai) await sb.from("itens").update({ ultimo_movimento: new Date().toISOString() }).eq("id", pai.id);
   return `Gravado: ${tipo} "${titulo}"${pai ? ` no projeto ${pai.titulo}` : cat ? ` na área ${cat.nome}` : " na caixa de entrada"}${prazo ? `, prazo ${prazo}` : ""}.`;
 }
