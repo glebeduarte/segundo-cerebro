@@ -47,7 +47,7 @@ O app reúne num só lugar projetos, tarefas, agenda, reuniões, notas, ideias e
 - **Nunca criar dados por GET.** Um link `/notas/nova` foi pré-carregado pelo Next e criou 11 notas vazias. Toda criação é por server action (POST). Links para páginas internas que fazem consultas pesadas usam `prefetch={false}`.
 - **Fuso horário.** O servidor roda em UTC. Datas e horas de exibição usam `America/Fortaleza` (UTC-3, sem horário de verão). Ver `lib/agenda.ts` e a saudação em `app/page.tsx`.
 - **Exclusões no banco** pelo conector do Supabase pedem confirmação que costuma ser cancelada. Prefira `status = 'arquivado'` a `delete`.
-- **Criar projeto Supabase e tarefa agendada** pelos conectores foi bloqueado por permissão. Glebe faz essas etapas manualmente quando necessário.
+- **Criar projeto Supabase** pelo conector foi bloqueado por permissão. Tarefa agendada funcionou em nov/2026. Glebe faz essas etapas manualmente quando necessário.
 
 ## Estrutura do código
 
@@ -90,7 +90,7 @@ Usuário dono: `1506574b-7695-4919-b0f4-252ebf11a83f`. Todas as tabelas têm RLS
 - `categoria_id`: área da vida
 - `link`: onde o item é resolvido
 - `origem` / `origem_ref`: de onde veio (granola, chat_claude, voz, captura, manual, nota) e URL de origem. Índice único em `(user_id, origem_ref)` impede importar duas vezes
-- `ultimo_movimento`: atualizado por atividade no app; avançado sozinho por `lib/movimento.ts` a cada abertura da tela Hoje (compromissos passados da agenda e reuniões do Granola cujo título contém o título ou uma tag do projeto; último commit dos repositórios em tags `repo:dono/nome`, com `GITHUB_TOKEN` opcional para repositórios privados); os projetos do claude.ai recebem a data de último acesso tirada do print semanal da lista de projetos que Glebe envia. Base do cálculo de "parado" (projeto ativo há mais de 14 dias sem movimento)
+- `ultimo_movimento`: atualizado por atividade no app; avançado sozinho por `lib/movimento.ts` a cada abertura da tela Hoje (compromissos passados da agenda e reuniões do Granola cujo título contém o título ou uma tag do projeto; último commit dos repositórios em tags `repo:dono/nome`, com `GITHUB_TOKEN` opcional para repositórios privados); os projetos do claude.ai recebem a data de último acesso tirada da lista de projetos do claude.ai: tarefa agendada diária às 20h21 (Natal) no computador de Glebe, que lê claude.ai/projects pelo Claude in Chrome e grava via Supabase; o print enviado por Glebe é a alternativa manual. Base do cálculo de "parado" (projeto ativo há mais de 14 dias sem movimento)
 - `conteudo` (texto completo, markdown nas notas), `resumo`, `tags[]`, `prazo`, `atualizado_em`
 
 Outras tabelas: `categorias` (Clientes, Produtos próprios, Expoeduc, Família, Lazer e RPG, Casa, Espiritualidade), `conexoes` (de_id, para_id, relacao: parte_de, menciona, relacionado), `pessoas`, `item_pessoas`, `eventos`, `uso_apps`, `tokens_uso`, `briefings`.
