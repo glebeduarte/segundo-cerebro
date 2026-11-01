@@ -89,10 +89,10 @@ Usuário dono: `1506574b-7695-4919-b0f4-252ebf11a83f`. Todas as tabelas têm RLS
 - `categoria_id`: área da vida
 - `link`: onde o item é resolvido
 - `origem` / `origem_ref`: de onde veio (granola, chat_claude, voz, captura, manual, nota) e URL de origem. Índice único em `(user_id, origem_ref)` impede importar duas vezes
-- `ultimo_movimento`: base do cálculo de "parado" (projeto ativo há mais de 14 dias sem movimento)
+- `ultimo_movimento`: atualizado por atividade no app; os projetos do claude.ai recebem a data de último acesso tirada do print da lista de projetos que Glebe envia. Base do cálculo de "parado" (projeto ativo há mais de 14 dias sem movimento)
 - `conteudo` (texto completo, markdown nas notas), `resumo`, `tags[]`, `prazo`, `atualizado_em`
 
-Outras tabelas: `categorias` (Clientes, Produtos próprios, Expoeduc, Família, Lazer e RPG, Casa), `conexoes` (de_id, para_id, relacao: parte_de, menciona, relacionado), `pessoas`, `item_pessoas`, `eventos`, `uso_apps`, `tokens_uso`, `briefings`.
+Outras tabelas: `categorias` (Clientes, Produtos próprios, Expoeduc, Família, Lazer e RPG, Casa, Espiritualidade), `conexoes` (de_id, para_id, relacao: parte_de, menciona, relacionado), `pessoas`, `item_pessoas`, `eventos`, `uso_apps`, `tokens_uso`, `briefings`.
 
 Função `registrar_uso(token, registros)` (security definer) é a única porta de escrita sem login.
 
@@ -100,7 +100,7 @@ Função `registrar_uso(token, registros)` (security definer) é a única porta 
 
 Item `tipo='area'` com `tags = ['clientes','produtos próprios','expoeduc']`. Todo projeto dessas áreas se liga a ele (`conexoes.relacao = 'parte_de'`) via `lib/nucleo.ts`, ao ser criado pela voz ou classificado na caixa de entrada. Para criar outro núcleo, basta um item `tipo='area'` com as áreas em `tags`.
 
-Outros núcleos (nov/2026): **Lazer** (tags `lazer e rpg`) contém o subnúcleo **RPG** (`pai_id` = Lazer) e se liga a **Família** (tags `família`). RPG agrupa Sistema APRPG, RPG com os filhos, Jogo de investigação, Campanha Walking Dead Universe e Natal 2030; Lazer agrupa também Spellfire e Comunidade BattleTech Brasil. Família agrupa os dois jogos com os filhos.
+Outros núcleos (nov/2026): **Lazer** (tags `lazer e rpg`) contém o subnúcleo **RPG** (`pai_id` = Lazer) e se liga a **Família** (tags `família`). RPG agrupa Sistema APRPG, RPG com os filhos, Jogo de investigação, Campanha Walking Dead Universe e Natal 2030; Lazer agrupa também Spellfire e Comunidade BattleTech Brasil. Família agrupa os dois jogos com os filhos. **Espiritualidade** (tags `espiritualidade`) agrupa Lar de Seu Luiz (LSL) e Garimpeiros da Luz (voluntariado). MCP e BattleTech ficam em Lazer.
 
 ## Projetos e contexto de Glebe registrados no banco
 
@@ -110,7 +110,7 @@ Outros núcleos (nov/2026): **Lazer** (tags `lazer e rpg`) contém o subnúcleo 
 - **Lazer e RPG:** Spellfire, Sistema APRPG (tarefas da migração do Lovable para Supabase próprio, Vercel e Claude), Campanha Walking Dead Universe, Comunidade BattleTech Brasil, Natal 2030 (concluído)
 - **Família:** RPG com os filhos e jogo de investigação (Rafael e Lara, no Canadá)
 - **Casa:** Aluguel da casa (reajuste vence 15/11), Casa Hylana
-- Projetos do claude.ai também cadastrados: Conan 2d20, O Um Anel RPG, Marvel RPG, Cyberpunk Red (no núcleo RPG), Expoeduc Treinamento, Negócios com Alma (marca pessoal), Lar de Seu Luiz (LSL) e MCP (sem área). Hangar 42 = Hangar Club, Gestão Residencial = Casa Hylana, WOD Natal = Natal 2030.
+- Projetos do claude.ai também cadastrados: Conan 2d20, O Um Anel RPG, Marvel RPG, Cyberpunk Red (no núcleo RPG), Expoeduc Treinamento, Negócios com Alma (marca pessoal), Lar de Seu Luiz (LSL), MCP. Hangar 42 é cliente e o Hangar Club é produto dele (Hangar Club `parte_de` Hangar 42). Gestão Residencial = Casa Hylana, WOD Natal = Natal 2030.
 - **Nunca cadastrar nem usar** estes projetos do claude.ai: Gustavo Cavalcanti, Ducenir, Palestras, Método Life Mastery, OAB RN Hudson, Quiz Curso de Passes LSL, Posicionamento Glebe.
 - Reuniões do Granola de outubro/2026 importadas com resumo completo em `conteudo`
 
