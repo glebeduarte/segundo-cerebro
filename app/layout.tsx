@@ -2,7 +2,14 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import MenuMovel from "@/components/MenuMovel";
 
-export const metadata: Metadata = { title: "Segundo cérebro", description: "Painel pessoal de Glebe Duarte" };
+export const metadata: Metadata = {
+  metadataBase: new URL("https://segundo-cerebro-black.vercel.app"),
+  title: "Segundo cérebro",
+  description: "Painel pessoal de Glebe Duarte",
+  appleWebApp: { capable: true, title: "Cérebro", statusBarStyle: "default" },
+  openGraph: { title: "Segundo cérebro", description: "Projetos, agenda, reuniões e notas em um painel só.", type: "website", locale: "pt_BR", siteName: "Segundo cérebro" },
+  twitter: { card: "summary_large_image", title: "Segundo cérebro", description: "Projetos, agenda, reuniões e notas em um painel só." },
+};
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#f1f1ef" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
