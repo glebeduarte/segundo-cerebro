@@ -34,6 +34,8 @@ async function carregar(): Promise<[Item[], Cat[]]> {
 
 export default async function Hoje() {
   const [itens, cats] = await carregar();
+  const horaLocal = Number(new Date().toLocaleString("en-US", { timeZone: "America/Fortaleza", hour: "numeric", hour12: false })) % 24;
+  const saudacao = horaLocal >= 5 && horaLocal < 12 ? "Bom dia" : horaLocal >= 12 && horaLocal < 18 ? "Boa tarde" : "Boa noite";
   const pais = new Map(itens.filter((i) => i.tipo === "projeto").map((p) => [p.id, p]));
   const Vai = ({ i, children }: { i: Item; children: React.ReactNode }) => {
     const d = destino(i, pais);
@@ -89,7 +91,7 @@ export default async function Hoje() {
         <svg className="links" id="links" />
         <div className="left">
           <p className="date">{fmtData.format(new Date()).replace(/^./, (c) => c.toUpperCase())}</p>
-          <h1>Bom dia, Glebe<b>.</b></h1>
+          <h1>{saudacao}, Glebe<b>.</b></h1>
           <p className="finding">{achado}<span>{sub}</span></p>
           <form className="ask" action={capturar}>
             <input id="q" name="texto" autoComplete="off" aria-label="Pergunte ou registre" placeholder="Pergunte ou registre algo" />
