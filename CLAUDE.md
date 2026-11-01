@@ -110,6 +110,8 @@ Outros núcleos (nov/2026): **Lazer** (tags `lazer e rpg`) contém o subnúcleo 
 - **Lazer e RPG:** Spellfire, Sistema APRPG (tarefas da migração do Lovable para Supabase próprio, Vercel e Claude), Campanha Walking Dead Universe, Comunidade BattleTech Brasil, Natal 2030 (concluído)
 - **Família:** RPG com os filhos e jogo de investigação (Rafael e Lara, no Canadá)
 - **Casa:** Aluguel da casa (reajuste vence 15/11), Casa Hylana
+- Projetos do claude.ai também cadastrados: Conan 2d20, O Um Anel RPG, Marvel RPG, Cyberpunk Red (no núcleo RPG), Expoeduc Treinamento, Negócios com Alma (marca pessoal), Lar de Seu Luiz (LSL) e MCP (sem área). Hangar 42 = Hangar Club, Gestão Residencial = Casa Hylana, WOD Natal = Natal 2030.
+- **Nunca cadastrar nem usar** estes projetos do claude.ai: Gustavo Cavalcanti, Ducenir, Palestras, Método Life Mastery, OAB RN Hudson, Quiz Curso de Passes LSL, Posicionamento Glebe.
 - Reuniões do Granola de outubro/2026 importadas com resumo completo em `conteudo`
 
 ## Integrações
