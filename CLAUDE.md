@@ -38,6 +38,7 @@ O app reúne num só lugar projetos, tarefas, agenda, reuniões, notas, ideias e
 | `ANTHROPIC_API_KEY` | chamadas ao Claude em `/api/perguntar` |
 | `ANTHROPIC_MODEL` | opcional; padrão `claude-haiku-5-5` |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth do Google para criar eventos (escopo calendar.events); redirect `/api/google/callback` |
+| `GITHUB_TOKEN` | opcional; token só leitura para ver commits de repositórios privados em `lib/movimento.ts` |
 | `GOOGLE_ICS_URL` | endereço secreto iCal do Google Agenda (dá acesso total à agenda: nunca expor) |
 
 ## Lições que já custaram tempo
@@ -89,7 +90,7 @@ Usuário dono: `1506574b-7695-4919-b0f4-252ebf11a83f`. Todas as tabelas têm RLS
 - `categoria_id`: área da vida
 - `link`: onde o item é resolvido
 - `origem` / `origem_ref`: de onde veio (granola, chat_claude, voz, captura, manual, nota) e URL de origem. Índice único em `(user_id, origem_ref)` impede importar duas vezes
-- `ultimo_movimento`: atualizado por atividade no app; os projetos do claude.ai recebem a data de último acesso tirada do print da lista de projetos que Glebe envia. Base do cálculo de "parado" (projeto ativo há mais de 14 dias sem movimento)
+- `ultimo_movimento`: atualizado por atividade no app; avançado sozinho por `lib/movimento.ts` a cada abertura da tela Hoje (compromissos passados da agenda e reuniões do Granola cujo título contém o título ou uma tag do projeto; último commit dos repositórios em tags `repo:dono/nome`, com `GITHUB_TOKEN` opcional para repositórios privados); os projetos do claude.ai recebem a data de último acesso tirada do print semanal da lista de projetos que Glebe envia. Base do cálculo de "parado" (projeto ativo há mais de 14 dias sem movimento)
 - `conteudo` (texto completo, markdown nas notas), `resumo`, `tags[]`, `prazo`, `atualizado_em`
 
 Outras tabelas: `categorias` (Clientes, Produtos próprios, Expoeduc, Família, Lazer e RPG, Casa, Espiritualidade), `conexoes` (de_id, para_id, relacao: parte_de, menciona, relacionado), `pessoas`, `item_pessoas`, `eventos`, `uso_apps`, `tokens_uso`, `briefings`.

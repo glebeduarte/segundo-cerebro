@@ -4,6 +4,7 @@ import { agendaDeHoje, linkDoDia, type Compromisso } from "@/lib/agenda";
 import { destino } from "@/lib/destino";
 import Link from "next/link";
 import { capturar, classificar, concluir, arquivar, novoEvento } from "./actions";
+import { sincronizarMovimento } from "@/lib/movimento";
 import { agendaConectada, googleConfigurado } from "@/lib/google";
 import { createClient, supabaseReady } from "@/lib/supabase/server";
 
@@ -26,6 +27,7 @@ async function carregar(): Promise<[Item[], Cat[]]> {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) redirect("/login");
+  await sincronizarMovimento(sb).catch((e) => console.error("movimento", e));
   const { data } = await sb.from("itens")
     .select("id,tipo,titulo,resumo,status,prazo,origem,origem_ref,link,pai_id,ultimo_movimento,criado_em,categorias(nome)")
     .neq("status", "arquivado").order("ultimo_movimento", { ascending: false });
