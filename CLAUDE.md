@@ -98,14 +98,16 @@ Função `registrar_uso(token, registros)` (security definer) é a única porta 
 
 ### Núcleo "Meu negócio"
 
-Item `tipo='area'` com `tags = ['clientes','produtos próprios','expoeduc']`. Todo projeto dessas áreas se liga a ele (`conexoes.relacao = 'parte_de'`) via `lib/nucleo.ts`, ao ser criado pela voz ou classificado na caixa de entrada. Para criar outro núcleo (ex.: Família), basta um item `tipo='area'` com as áreas em `tags`.
+Item `tipo='area'` com `tags = ['clientes','produtos próprios','expoeduc']`. Todo projeto dessas áreas se liga a ele (`conexoes.relacao = 'parte_de'`) via `lib/nucleo.ts`, ao ser criado pela voz ou classificado na caixa de entrada. Para criar outro núcleo, basta um item `tipo='area'` com as áreas em `tags`.
+
+Outros núcleos (nov/2026): **Lazer** (tags `lazer e rpg`) contém o subnúcleo **RPG** (`pai_id` = Lazer) e se liga a **Família** (tags `família`). RPG agrupa Sistema APRPG, RPG com os filhos, Jogo de investigação, Campanha Walking Dead Universe e Natal 2030; Lazer agrupa também Spellfire e Comunidade BattleTech Brasil. Família agrupa os dois jogos com os filhos.
 
 ## Projetos e contexto de Glebe registrados no banco
 
 - **Clientes:** Consultoria Jácome (principal; mentoria odontológica de Alexandre e Marianna, produto dos filhos Léo e Davi), Hangar Club (app de treinos, hangar-club.app), Leonardo Dantas, Método Mário Santana, Bartira Rebouças, Chalet Suisse
 - **Produtos próprios:** Negócio de Conteúdo / Mind Club (com Letícia Souza), Quizuu, Extensão WhatsApp, Segundo cérebro
 - **Expoeduc:** Expoeduc Academy (plataforma para gestores escolares; treinamento de IA da equipe em 29/10)
-- **Lazer e RPG:** Spellfire, Sistema APRPG
+- **Lazer e RPG:** Spellfire, Sistema APRPG (tarefas da migração do Lovable para Supabase próprio, Vercel e Claude), Campanha Walking Dead Universe, Comunidade BattleTech Brasil, Natal 2030 (concluído)
 - **Família:** RPG com os filhos e jogo de investigação (Rafael e Lara, no Canadá)
 - **Casa:** Aluguel da casa (reajuste vence 15/11), Casa Hylana
 - Reuniões do Granola de outubro/2026 importadas com resumo completo em `conteudo`
