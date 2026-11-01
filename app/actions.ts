@@ -1,5 +1,7 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+import { criarEvento } from "@/lib/google";
 import { createClient } from "@/lib/supabase/server";
 import { conectarNoContexto } from "@/lib/nucleo";
 
@@ -76,4 +78,14 @@ export async function reabrir(form: FormData) {
   const sb = await createClient();
   await sb.from("itens").update({ status: "ativo" }).eq("id", String(form.get("id")));
   revalidatePath("/tarefas"); revalidatePath("/");
+}
+
+export async function novoEvento(form: FormData) {
+  const v = (k: string) => String(form.get(k) ?? "").trim();
+  const sb = await createClient();
+  let msg = "evento-criado";
+  try { await criarEvento(sb, { titulo: v("titulo"), data: v("data"), inicio: v("inicio") || undefined, fim: v("fim") || undefined, local: v("local") }); }
+  catch (e) { console.error("novoEvento", (e as Error).message); msg = "evento-erro"; }
+  revalidateTag("agenda"); revalidatePath("/");
+  redirect(`/?agenda=${msg}`);
 }

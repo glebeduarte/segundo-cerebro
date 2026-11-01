@@ -37,6 +37,7 @@ O app reúne num só lugar projetos, tarefas, agenda, reuniões, notas, ideias e
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | chave pública (publishable) do Supabase |
 | `ANTHROPIC_API_KEY` | chamadas ao Claude em `/api/perguntar` |
 | `ANTHROPIC_MODEL` | opcional; padrão `claude-haiku-5-5` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | OAuth do Google para criar eventos (escopo calendar.events); redirect `/api/google/callback` |
 | `GOOGLE_ICS_URL` | endereço secreto iCal do Google Agenda (dá acesso total à agenda: nunca expor) |
 
 ## Lições que já custaram tempo
@@ -110,7 +111,7 @@ Item `tipo='area'` com `tags = ['clientes','produtos próprios','expoeduc']`. To
 
 ## Integrações
 
-- **Google Agenda:** leitura por iCal secreto (`GOOGLE_ICS_URL`), cache de 5 minutos. Cada evento abre no Google Agenda.
+- **Google Agenda:** leitura por iCal secreto (`GOOGLE_ICS_URL`), cache de 5 minutos. Cada evento abre no Google Agenda. Escrita por OAuth (`lib/google.ts`, tabela `google_tokens` com o refresh token): formulário "Novo evento" no painel Agenda e ferramenta `criar_evento` do Claude na voz. O feed iCal do Google pode levar alguns minutos para mostrar o evento novo.
 - **Granola** (plano gratuito: resumos sim, transcrições não, histórico de 30 dias): importação feita por Claude via conector, não pelo app. Reuniões entram como `tipo='reuniao'`, próximos passos como tarefas; responsável incerto vira "Responsável a confirmar".
 - **Conversas no claude.ai:** o app não lê o histórico. Registro via skill "registrar-segundo-cerebro" (grava no banco quando Glebe diz "registra isso no segundo cérebro").
 - **iPhone:** automação do app Atalhos por app aberto, POST em `/api/uso` com `Authorization: Bearer <token>`. Só aberturas (o iOS não libera duração).

@@ -53,6 +53,7 @@ export async function POST(req: Request) {
 
   const sistema = `Você é o segundo cérebro de Glebe Duarte, mentor de negócios em Natal. Você conhece a agenda dele (Google Agenda), as reuniões gravadas no Granola com resumo completo, projetos, tarefas, ideias e conversas registradas.
 Para responder, busque os dados com as ferramentas antes de afirmar qualquer coisa. Exemplos: "próxima reunião" → agenda; "o que levar para a reunião com X" → agenda para achar a próxima com X, depois buscar a última reunião com X e abrir o resumo completo, e responder com pendências e próximos passos que ficaram dela; "como está o projeto Y" → buscar e abrir.
+Se ele pedir para marcar algo na agenda, use criar_evento (datas relativas como "amanhã" ou "quinta" contam a partir de agora, no fuso de Natal) e confirme dia e hora na resposta.
 Se ele quiser anotar algo, use registrar já entendendo o contexto: escolha a área e o projeto certos pela lista de projetos e pelo assunto (um cliente novo vai para a área Clientes; algo sobre um cliente existente vai dentro do projeto dele), e preencha relacionados com os títulos exatos de outros itens citados. Na dúvida sobre a qual projeto pertence, use buscar antes de registrar.
 Se o dado não existir, diga que não está registrado e onde ele pode estar. Nunca invente nomes, datas ou números.
 A resposta final será lida em voz alta: português do Brasil, tom direto, sem travessões, sem emoji, sem listas ou marcadores, no máximo 4 frases e 80 palavras.
@@ -62,7 +63,7 @@ ${base}`;
 
   const tools = [...FERRAMENTAS, REGISTRAR];
   const mensagens: { role: "user" | "assistant"; content: unknown }[] = [{ role: "user", content: pedido }];
-  let registrou = false;
+  let registrou = false, criouEvento = false;
 
   for (let volta = 0; volta < 6; volta++) {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -79,7 +80,7 @@ ${base}`;
     const usos = blocos.filter((b) => b.type === "tool_use");
     if (j.stop_reason !== "tool_use" || !usos.length) {
       const resposta = blocos.filter((b) => b.type === "text").map((b) => b.text).join(" ").trim() || "Não encontrei uma resposta.";
-      return NextResponse.json({ intencao: registrou ? "registro" : "pergunta", resposta });
+      return NextResponse.json({ intencao: registrou || criouEvento ? "registro" : "pergunta", resposta });
     }
     mensagens.push({ role: "assistant", content: blocos });
     const resultados = [];
@@ -87,7 +88,7 @@ ${base}`;
       let saida: string;
       try {
         if (u.name === "registrar") { saida = await registrar(sb, u.input ?? {}, pedido, cats ?? [], projetos); registrou = true; }
-        else saida = await executar(sb, u.name!, u.input ?? {});
+        else { saida = await executar(sb, u.name!, u.input ?? {}); if (u.name === "criar_evento") criouEvento = true; }
       } catch (e) { saida = `Erro: ${(e as Error).message}`; }
       resultados.push({ type: "tool_result", tool_use_id: u.id, content: saida.slice(0, 12000) });
     }

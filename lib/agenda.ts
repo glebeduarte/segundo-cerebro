@@ -23,7 +23,7 @@ export async function agendaDeHoje(): Promise<Compromisso[] | null> {
 export async function agendaEntre(ini: Date, fim: Date): Promise<Compromisso[] | null> {
   const url = process.env.GOOGLE_ICS_URL;
   if (!url) return null;
-  const res = await fetch(url, { next: { revalidate: 300 } });
+  const res = await fetch(url, { next: { revalidate: 300, tags: ["agenda"] } });
   if (!res.ok) throw new Error(`Agenda respondeu ${res.status}`);
   const dados = ical.sync.parseICS(await res.text());
   const conta = decodeURIComponent(url.match(/\/ical\/([^/]+)\//)?.[1] ?? "");

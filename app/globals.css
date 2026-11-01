@@ -356,3 +356,15 @@ header .som:hover{color:#1c1d1b;border-color:#bdbdb7}
 .config code{background:var(--surface);border-radius:6px;padding:1px 6px;font-size:12px;word-break:break-all}
 .config .campo{display:grid;gap:4px;margin:8px 0;font-size:12px;color:var(--muted)}
 .aviso-token{font-size:12px;color:var(--warning);margin:4px 0 0}
+
+/* Novo evento na agenda */
+.novo-evento{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.novo-evento summary{cursor:pointer;color:#1b6e66;font-weight:600;list-style:none}
+.novo-evento summary::-webkit-details-marker{display:none}
+.novo-evento form{display:grid;gap:8px;margin-top:10px}
+.novo-evento input{height:38px;border:1px solid var(--control);border-radius:10px;padding:0 12px;font:inherit;background:#fff;color:var(--text);min-width:0;width:100%}
+.novo-evento .horas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.novo-evento small{color:var(--muted,#6b6b66)}
+.conectar-agenda{display:inline-block;margin-top:10px;text-decoration:none}
+.aviso-ok{color:#1b6e66}
+.aviso-erro{color:#92400e}

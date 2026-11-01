@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { agendaDeHoje, linkDoDia, type Compromisso } from "@/lib/agenda";
 import { destino } from "@/lib/destino";
 import Link from "next/link";
-import { capturar, classificar, concluir, arquivar } from "./actions";
+import { capturar, classificar, concluir, arquivar, novoEvento } from "./actions";
+import { agendaConectada, googleConfigurado } from "@/lib/google";
 import { createClient, supabaseReady } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,8 @@ async function carregar(): Promise<[Item[], Cat[]]> {
   return [(data as unknown as Item[]) ?? [], (cats as Cat[]) ?? []];
 }
 
-export default async function Hoje() {
+export default async function Hoje({ searchParams }: { searchParams: Promise<{ agenda?: string }> }) {
+  const { agenda: avisoAgenda } = await searchParams;
   const [itens, cats] = await carregar();
   const horaLocal = Number(new Date().toLocaleString("en-US", { timeZone: "America/Fortaleza", hour: "numeric", hour12: false })) % 24;
   const saudacao = horaLocal >= 5 && horaLocal < 12 ? "Bom dia" : horaLocal >= 12 && horaLocal < 18 ? "Boa tarde" : "Boa noite";
@@ -44,6 +46,8 @@ export default async function Hoje() {
       : <Link className="vai" href={d.href}>{children}</Link>;
   };
   const Info = ({ i }: { i: Item }) => <Link className="info" href={`/item/${i.id}`} aria-label={`Detalhes de ${i.titulo}`}><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="1.2" /><circle cx="8" cy="8" r="1.2" /><circle cx="13" cy="8" r="1.2" /></svg></Link>;
+  const escrita = googleConfigurado() ? await agendaConectada(await createClient()).catch(() => null) : null;
+  const hojeLocal = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
   let agenda: Compromisso[] | null = null, erroAgenda = false;
   try { agenda = await agendaDeHoje(); } catch { erroAgenda = true; }
   const hora = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Fortaleza" });
@@ -142,6 +146,10 @@ export default async function Hoje() {
           <section className="panel s4" aria-labelledby="h-agenda">
             <div className="ph"><h2 id="h-agenda">Agenda</h2><span className="pchip num">{agenda?.length ?? 0}</span><a className="more" href={linkDoDia()} target="_blank" rel="noopener noreferrer">Abrir agenda</a></div>
             <div className="rows">
+              {avisoAgenda === "evento-criado" && <p className="empty aviso-ok">Evento criado no Google Agenda. Pode levar alguns minutos para aparecer aqui.</p>}
+              {avisoAgenda === "evento-erro" && <p className="empty aviso-erro">Não consegui criar o evento. Se persistir, conecte a agenda de novo.</p>}
+              {avisoAgenda === "conectada" && <p className="empty aviso-ok">Agenda conectada. Já dá para criar eventos.</p>}
+              {avisoAgenda === "erro" && <p className="empty aviso-erro">A conexão com o Google falhou. Tente de novo.</p>}
               {agenda === null && !erroAgenda && <p className="empty">Agenda ainda não conectada.</p>}
               {erroAgenda && <p className="empty">Não consegui ler a agenda agora. Tento de novo em alguns minutos.</p>}
               {agenda?.length === 0 && <p className="empty">Nenhum compromisso hoje.</p>}
@@ -152,6 +160,21 @@ export default async function Hoje() {
                 </a>
               ))}
             </div>
+            {escrita ? (
+              <details className="novo-evento">
+                <summary>Novo evento</summary>
+                <form action={novoEvento}>
+                  <input name="titulo" required placeholder="Título" aria-label="Título do evento" autoComplete="off" />
+                  <input name="data" type="date" required defaultValue={hojeLocal} aria-label="Data" />
+                  <div className="horas"><input name="inicio" type="time" aria-label="Início" /><input name="fim" type="time" aria-label="Fim" /></div>
+                  <input name="local" placeholder="Local ou link (opcional)" aria-label="Local" autoComplete="off" />
+                  <small>Sem horário vira evento de dia inteiro. Sem fim, dura 1 hora.</small>
+                  <button className="btn primary">Criar na agenda</button>
+                </form>
+              </details>
+            ) : googleConfigurado() ? (
+              <a className="btn conectar-agenda" href="/api/google/conectar">Permitir criar eventos</a>
+            ) : null}
           </section>
 
           <section className="panel s4" aria-labelledby="h-reu">

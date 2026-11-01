@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { agendaEntre } from "@/lib/agenda";
+import { revalidateTag } from "next/cache";
+import { criarEvento } from "@/lib/google";
 
 const TZ = "America/Fortaleza";
 const fmt = (d: Date) => d.toLocaleString("pt-BR", { timeZone: TZ, weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -12,6 +14,8 @@ export const FERRAMENTAS = [
     input_schema: { type: "object", properties: { texto: { type: "string" }, tipo: { type: "string", enum: ["projeto", "tarefa", "reuniao", "conversa", "ideia", "livro", "nota"] } }, required: ["texto"] } },
   { name: "abrir", description: "Lê um item completo pelo id: conteúdo inteiro (ex.: resumo completo da reunião), link, prazo, e os itens ligados a ele (tarefas, reuniões, conversas).",
     input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"] } },
+  { name: "criar_evento", description: "Cria um evento no Google Agenda de Glebe. Use só quando ele pedir para marcar, agendar ou colocar algo na agenda. Sem hora de início, vira evento de dia inteiro. Antes de criar, confira na agenda se há conflito e avise na resposta.",
+    input_schema: { type: "object", properties: { titulo: { type: "string" }, data: { type: "string", description: "AAAA-MM-DD, no fuso de Natal" }, inicio: { type: "string", description: "HH:MM (24h), vazio para dia inteiro" }, fim: { type: "string", description: "HH:MM, opcional" }, duracao_min: { type: "integer", description: "Usado se não houver fim; padrão 60" }, local: { type: "string" }, descricao: { type: "string" } }, required: ["titulo", "data"] } },
 ] as const;
 
 export async function executar(sb: SupabaseClient, nome: string, args: Record<string, unknown>): Promise<string> {
@@ -40,6 +44,11 @@ export async function executar(sb: SupabaseClient, nome: string, args: Record<st
       i.resumo && `Resumo: ${i.resumo}`, i.conteudo && `Conteúdo:\n${String(i.conteudo).slice(0, 6000)}`,
       filhos?.length ? "Ligados:\n" + filhos.map((f) => `- ${f.tipo} · ${f.titulo}${f.status === "concluido" ? " (concluído)" : ""}${f.prazo ? ` · prazo ${f.prazo}` : ""}${f.resumo ? " · " + f.resumo : ""}`).join("\n") : null,
     ].filter(Boolean).join("\n");
+  }
+  if (nome === "criar_evento") {
+    const ev = await criarEvento(sb, { titulo: String(args.titulo ?? ""), data: String(args.data ?? ""), inicio: args.inicio ? String(args.inicio) : undefined, fim: args.fim ? String(args.fim) : undefined, duracaoMin: args.duracao_min ? Number(args.duracao_min) : undefined, local: args.local ? String(args.local) : undefined, descricao: args.descricao ? String(args.descricao) : undefined });
+    revalidateTag("agenda");
+    return `Evento criado: ${ev.titulo}. Link: ${ev.link}`;
   }
   return "Ferramenta desconhecida.";
 }
