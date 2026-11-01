@@ -163,6 +163,7 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ALVO={hoje:'h-hoje',entrada:'h-entrada',projetos:'h-mov',parados:'h-mov',reunioes:'h-reu',ideias:'h-ideias',livros:'h-ideias'};
 function irPara(id){
   if(id==='foco'){location.href='/foco';return}
+  if(id==='livros'){location.href='/livros';return}
   const h=document.getElementById(ALVO[id]); if(!h)return;
   const panel=h.closest('.panel')||h;
   panel.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
@@ -275,29 +276,49 @@ document.fonts.ready.then(()=>{layout();requestAnimationFrame(tick)});
 (function conversa(){
   const form=document.querySelector('form.ask'), q=document.getElementById('q'), toast=document.getElementById('toast');
   if(!form||!q||!toast)return;
-  const vozes=()=>speechSynthesis.getVoices().filter(v=>v.lang&&v.lang.toLowerCase().startsWith('pt'));
+  const temVoz='speechSynthesis' in window;
+  const vozes=()=>temVoz?speechSynthesis.getVoices().filter(v=>v.lang&&v.lang.toLowerCase().startsWith('pt')):[];
+  /* iPhone e Safari só deixam falar se a fala começar num toque. Destrava no toque e fala depois da resposta. */
+  let destravada=false;
+  function destravar(){
+    if(!temVoz||destravada)return;
+    try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='pt-BR';speechSynthesis.speak(u);destravada=true}catch(e){}
+  }
+  ['pointerdown','touchend','keydown'].forEach(ev=>addEventListener(ev,destravar,{capture:true,passive:true}));
   function falar(txt,depois){
-    if(!('speechSynthesis' in window)){depois&&depois();return}
-    speechSynthesis.cancel();
+    if(!temVoz){depois&&depois();return}
+    if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
+    speechSynthesis.resume();
     const u=new SpeechSynthesisUtterance(txt); u.lang='pt-BR'; u.rate=1.05;
     const v=vozes().find(v=>/br/i.test(v.lang))||vozes()[0]; if(v)u.voice=v;
-    window.__falando=true;
-    u.onend=u.onerror=()=>{window.__falando=false;depois&&depois()};
-    speechSynthesis.speak(u);
+    window.__falando=true; let fim=false;
+    const acabou=()=>{if(fim)return;fim=true;clearInterval(vivo);window.__falando=false;depois&&depois()};
+    u.onend=u.onerror=acabou;
+    /* Chrome corta falas longas depois de uns 15 s; manter vivo */
+    const vivo=setInterval(()=>{if(!speechSynthesis.speaking)return;speechSynthesis.pause();speechSynthesis.resume()},10000);
+    setTimeout(()=>speechSynthesis.speak(u),60);
+    setTimeout(()=>{if(!speechSynthesis.speaking&&!fim)acabou()},Math.max(8000,txt.length*120));
+  }
+  function botaoOuvir(txt){
+    if(!temVoz)return;
+    const b=document.createElement('button'); b.type='button'; b.className='ouvir'; b.textContent='Ouvir resposta';
+    b.addEventListener('click',ev=>{ev.stopPropagation();destravada=false;destravar();falar(txt)});
+    toast.appendChild(b);
   }
   let ocupado=false;
   form.addEventListener('submit',async e=>{
     e.preventDefault(); const texto=q.value.trim(); if(!texto||ocupado)return;
-    ocupado=true; q.value=''; q.placeholder='Pensando…';
+    destravar(); ocupado=true; q.value=''; q.placeholder='Pensando…';
     toast.innerHTML='<b>Pensando…</b><small>'+texto.replace(/[<>&]/g,'')+'</small>'; toast.classList.add('in');
     try{
       const r=await fetch('/api/perguntar',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({texto})});
       const j=await r.json();
       const resp=j.resposta||j.erro||'Não consegui responder agora.';
       toast.innerHTML='<b>'+(j.intencao==='registro'?'Registrado':'Resposta')+'</b><small>'+resp.replace(/[<>&]/g,'')+'</small>';
-      falar(resp,()=>{ if(j.intencao==='registro'&&r.ok)location.reload(); else setTimeout(()=>toast.classList.remove('in'),4000) });
+      botaoOuvir(resp);
+      falar(resp,()=>{ if(j.intencao==='registro'&&r.ok)setTimeout(()=>location.reload(),1500); else setTimeout(()=>toast.classList.remove('in'),8000) });
     }catch(err){ toast.innerHTML='<b>Sem conexão</b><small>Não consegui falar com o servidor.</small>'; }
     finally{ ocupado=false; q.placeholder='Pergunte ou registre algo'; }
   });
-  if('speechSynthesis' in window)speechSynthesis.getVoices();
+  if(temVoz){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices()}
 })();

@@ -86,7 +86,7 @@ export default async function Hoje({ searchParams }: { searchParams: Promise<{ a
     <>
       <header>
         <span className="brand"><span className="mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.7"><circle cx="5" cy="5" r="2" /><circle cx="11" cy="11" r="2" /><path d="M6.5 6.5l3 3" /></svg></span>Segundo cérebro</span>
-        <nav><a href="#" aria-current="page">Hoje</a><a href="#h-mov">Projetos</a><Link href="/tarefas">Tarefas</Link><Link href="/notas">Notas</Link><Link href="/mapa">Mapa</Link><Link href="/vida">Vida</Link><Link href="/foco">Foco</Link></nav>
+        <nav><a href="#" aria-current="page">Hoje</a><a href="#h-mov">Projetos</a><Link href="/tarefas">Tarefas</Link><Link href="/notas">Notas</Link><Link href="/livros">Livros</Link><Link href="/mapa">Mapa</Link><Link href="/vida">Vida</Link><Link href="/foco">Foco</Link></nav>
         <span className="kbd">Buscar em tudo<span>⌘ K</span></span>
       </header>
 
@@ -202,7 +202,7 @@ export default async function Hoje({ searchParams }: { searchParams: Promise<{ a
             </div>
           </section>
           <section className="panel s12" aria-labelledby="h-ideias">
-            <div className="ph"><h2 id="h-ideias">Ideias e leituras</h2><span className="pchip num">{ideias.length + livros.length}</span></div>
+            <div className="ph"><h2 id="h-ideias">Ideias e leituras</h2><span className="pchip num">{ideias.length + livros.length}</span><Link className="more" href="/livros">Livros</Link></div>
             <div className="rows">
               {ideias.length + livros.length === 0 && <p className="empty">Nenhuma ideia ou livro ainda. Registre no campo do topo e organize como Ideia ou Livro.</p>}
               {[...livros, ...ideias].slice(0, 8).map((i) => <div className="row" key={i.id}><span className="t"><Vai i={i}><b>{i.titulo}</b></Vai><small>{i.tipo === "livro" ? "Livro em leitura" : "Ideia"}{i.categorias ? ` · ${i.categorias.nome}` : ""}</small></span><form action={arquivar}><input type="hidden" name="id" value={i.id} /><button className="btn">Arquivar</button></form></div>)}

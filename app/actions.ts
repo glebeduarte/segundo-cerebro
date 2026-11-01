@@ -89,3 +89,25 @@ export async function novoEvento(form: FormData) {
   revalidateTag("agenda"); revalidatePath("/");
   redirect(`/?agenda=${msg}`);
 }
+
+const STATUS_LIVRO = ["ativo", "pausado", "ideia", "concluido"];
+
+export async function criarLivro(form: FormData) {
+  const titulo = String(form.get("titulo") ?? "").trim().slice(0, 200);
+  if (!titulo) return;
+  const autor = String(form.get("autor") ?? "").trim().slice(0, 120);
+  const st = String(form.get("status") ?? "ativo");
+  const sb = await createClient();
+  const { data: lazer } = await sb.from("categorias").select("id").ilike("nome", "Lazer%").maybeSingle();
+  await sb.from("itens").insert({ tipo: "livro", titulo, resumo: autor || null, status: STATUS_LIVRO.includes(st) ? st : "ativo", origem: "manual", categoria_id: lazer?.id ?? null });
+  revalidatePath("/livros"); revalidatePath("/");
+}
+
+export async function statusLivro(form: FormData) {
+  const st = String(form.get("status"));
+  if (!STATUS_LIVRO.includes(st)) return;
+  const sb = await createClient();
+  const agora = new Date().toISOString();
+  await sb.from("itens").update({ status: st, ultimo_movimento: agora, atualizado_em: agora }).eq("id", String(form.get("id"))).eq("tipo", "livro");
+  revalidatePath("/livros"); revalidatePath("/");
+}

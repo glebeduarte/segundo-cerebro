@@ -57,6 +57,7 @@ app/
   api/perguntar/      Claude com ferramentas (agenda, buscar, abrir, registrar); resposta curta lida em voz alta
   api/uso/            Recebe uso de apps por token (Atalhos do iPhone, ActivityWatch)
   item/[id]/          Página de qualquer item: botão "Abrir onde isso é feito", link/prazo/notas, tarefas, conectados, histórico
+  livros/             Livros por situação (lendo, pausados, quero ler, lidos), criação manual; voz registra com autor e situação
   tarefas/            Lista agrupada (atrasadas, hoje, 7 dias, depois, sem prazo), criação rápida com link opcional
   notas/              Módulo estilo Obsidian: árvore por área, editor markdown, [[links]], #tags, subnotas, "Mencionada em"
   mapa/               Grafo de conexões com zoom, arrastar, pinça e caixa de detalhes

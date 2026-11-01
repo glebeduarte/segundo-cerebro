@@ -10,7 +10,7 @@ const TZ = "America/Fortaleza";
 
 const REGISTRAR = {
   name: "registrar",
-  description: "Guarda no segundo cérebro algo que Glebe pediu para anotar: tarefa, ideia, projeto, livro ou nota. Use só quando ele quiser registrar, não para perguntas.",
+  description: "Guarda no segundo cérebro algo que Glebe pediu para anotar: tarefa, ideia, projeto, livro ou nota. Use só quando ele quiser registrar, não para perguntas. Para livro, preencha autor se ele disser e situacao_livro (lendo, quero_ler, pausado, lido; padrão lendo).",
   input_schema: {
     type: "object",
     properties: {
@@ -19,6 +19,8 @@ const REGISTRAR = {
       area: { type: "string", description: "Nome exato de uma das áreas, ou vazio" },
       projeto: { type: "string", description: "Título exato de um projeto existente, ou vazio" },
       prazo: { type: "string", description: "AAAA-MM-DD se ele citou data" },
+      autor: { type: "string", description: "Só para livro" },
+      situacao_livro: { type: "string", enum: ["lendo", "quero_ler", "pausado", "lido"], description: "Só para livro" },
       relacionados: { type: "array", items: { type: "string" }, description: "Títulos exatos de projetos, pessoas ou notas existentes a que isto se liga" },
     },
     required: ["tipo", "titulo"],
@@ -54,6 +56,7 @@ export async function POST(req: Request) {
   const sistema = `Você é o segundo cérebro de Glebe Duarte, mentor de negócios em Natal. Você conhece a agenda dele (Google Agenda), as reuniões gravadas no Granola com resumo completo, projetos, tarefas, ideias e conversas registradas.
 Para responder, busque os dados com as ferramentas antes de afirmar qualquer coisa. Exemplos: "próxima reunião" → agenda; "o que levar para a reunião com X" → agenda para achar a próxima com X, depois buscar a última reunião com X e abrir o resumo completo, e responder com pendências e próximos passos que ficaram dela; "como está o projeto Y" → buscar e abrir.
 Se ele pedir para marcar algo na agenda, use criar_evento (datas relativas como "amanhã" ou "quinta" contam a partir de agora, no fuso de Natal) e confirme dia e hora na resposta.
+Livros: "anota o livro X" registra tipo livro; "quais livros estou lendo" usa buscar com tipo livro.
 Se ele quiser anotar algo, use registrar já entendendo o contexto: escolha a área e o projeto certos pela lista de projetos e pelo assunto (um cliente novo vai para a área Clientes; algo sobre um cliente existente vai dentro do projeto dele), e preencha relacionados com os títulos exatos de outros itens citados. Na dúvida sobre a qual projeto pertence, use buscar antes de registrar.
 Se o dado não existir, diga que não está registrado e onde ele pode estar. Nunca invente nomes, datas ou números.
 A resposta final será lida em voz alta: português do Brasil, tom direto, sem travessões, sem emoji, sem listas ou marcadores, no máximo 4 frases e 80 palavras.
@@ -109,8 +112,9 @@ async function registrar(
   const prazo = /^\d{4}-\d{2}-\d{2}$/.test(String(g.prazo ?? "")) ? String(g.prazo) : null;
   const { data: novo, error } = await sb.from("itens").insert({
     tipo, titulo, conteudo: pedido, prazo, origem: "voz",
-    status: tipo === "tarefa" || tipo === "projeto" ? "ativo" : "ideia",
-    categoria_id: cat?.id ?? pai?.categoria_id ?? null, pai_id: pai?.id ?? null,
+    status: tipo === "livro" ? ({ lendo: "ativo", quero_ler: "ideia", pausado: "pausado", lido: "concluido" } as Record<string, string>)[String(g.situacao_livro ?? "lendo")] ?? "ativo" : tipo === "tarefa" || tipo === "projeto" ? "ativo" : "ideia",
+    resumo: tipo === "livro" && g.autor ? String(g.autor).slice(0, 120) : null,
+    categoria_id: cat?.id ?? pai?.categoria_id ?? (tipo === "livro" ? cats.find((c) => c.nome.toLowerCase().startsWith("lazer"))?.id ?? null : null), pai_id: pai?.id ?? null,
   }).select("id").single();
   if (error || !novo) return `Falhou ao gravar: ${error?.message}`;
   await conectarNoContexto(sb, novo.id, Array.isArray(g.relacionados) ? (g.relacionados as string[]) : []);
